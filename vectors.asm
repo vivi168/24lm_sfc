@@ -31,6 +31,7 @@ FastReset:
     sta OBJSEL          ; oam start @VRAM[c000]
 
 ;  ---- Some initialization
+    jsr @InitLzssDecode
     jsr @InitOamBuffer
     jsr @InitLevel
     jsr @CopyInitialColumns

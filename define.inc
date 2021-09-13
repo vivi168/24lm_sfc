@@ -6,6 +6,14 @@
 .define BG1_BUFFER_SIZE      8000
 .define SPRITES_TILES_SIZE   0800
 .define SPRITES_PALETTE_SIZE 0020
+.define COMPRESSED_CIRCUIT_SIZE 205f
+
+; decompression
+.define EI 000b
+.define EJ 0004
+.define N  0800
+.define F  11
+.define NF 07ef ; N - F
 
 ; OAM
 .define OAML_SIZE   0200

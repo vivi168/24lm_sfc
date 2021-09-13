@@ -20,6 +20,7 @@
 .include object.asm
 .include hud.asm
 .include music.asm
+.include decompress.asm
 
 MainLoop:
     jsr @WaitNextVBlank

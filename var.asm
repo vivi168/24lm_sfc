@@ -18,11 +18,30 @@ next_column_write:        .rb 2
 next_row_read:            .rb 2
 next_row_write:           .rb 2
 
+; ---- for decompression
+r:                      .rb 2
+i:                      .rb 2
+j:                      .rb 2
+k:                      .rb 2
+
+buf:                    .rb 1
+mask:                   .rb 1
+
+infile:                 .rb 3   ; address of file to decompress
+infile_idx:             .rb 2   ; index to current infile byte
+infile_siz:             .rb 2
+
+buffer_addr:            .rb 3   ; address of buffer
+outfile_addr:           .rb 3   ; address of outfile
+outfile_idx:            .rb 2   ; index to current outfile byte
+; ----
+
 .org 7e2000
 
 bg1_buffer:               .rb 8000
 oam_buffer:               .rb 200
 oam_buffer_hi:            .rb 20
+buffer:                   .rb 1000 ; decompression buffer
 
 .org 7f0000
 
