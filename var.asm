@@ -31,9 +31,9 @@ infile:                 .rb 3   ; address of file to decompress
 infile_idx:             .rb 2   ; index to current infile byte
 infile_siz:             .rb 2
 
-buffer_addr:            .rb 3   ; address of buffer
-outfile_addr:           .rb 3   ; address of outfile
-outfile_idx:            .rb 2   ; index to current outfile byte
+decompression_buffer_addr: .rb 3   ; address of decompression buffer
+outfile_addr:              .rb 3   ; address of outfile
+outfile_idx:               .rb 2   ; index to current outfile byte
 ; ----
 
 .org 7e2000
@@ -41,7 +41,7 @@ outfile_idx:            .rb 2   ; index to current outfile byte
 bg1_buffer:               .rb 8000
 oam_buffer:               .rb 200
 oam_buffer_hi:            .rb 20
-buffer:                   .rb 1000 ; decompression buffer
+decompression_buffer:     .rb 1000 ; decompression buffer
 
 .org 7f0000
 

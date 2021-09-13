@@ -16,10 +16,10 @@ InitLzssDecode:
     lda #^circuit_zip
     sta @infile+2
 
-    ldx #@buffer
-    stx @buffer_addr
-    lda #^buffer
-    sta @buffer_addr+2
+    ldx #@decompression_buffer
+    stx @decompression_buffer_addr
+    lda #^decompression_buffer
+    sta @decompression_buffer_addr+2
 
     ldx #@circuit
     stx @outfile_addr
@@ -88,7 +88,7 @@ LzssDecode:
     iny
 clear_buffer_loop:
     dey
-    sta [<buffer_addr],y
+    sta [<decompression_buffer_addr],y
     bne @clear_buffer_loop
 
 decode_loop:
@@ -131,7 +131,7 @@ bit_is_one:
     sta [<outfile_addr],y
 
     ldy @r
-    sta [<buffer_addr],y
+    sta [<decompression_buffer_addr],y
 
     rep #20
     ; r = (r + 1) & (N - 1)
@@ -170,12 +170,12 @@ buffer_loop:
     pla
     sep #20
 
-    lda [<buffer_addr],y
+    lda [<decompression_buffer_addr],y
     ldy @outfile_idx
     sta [<outfile_addr],y
 
     ldy @r
-    sta [<buffer_addr],y
+    sta [<decompression_buffer_addr],y
 
     rep #20
     ; r = (r + 1) & (N - 1)
