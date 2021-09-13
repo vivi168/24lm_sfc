@@ -1,0 +1,5 @@
+*.sfc
+*.spc
+labels.txt
+labels.msl
+.byebug_history

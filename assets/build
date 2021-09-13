@@ -1,0 +1,3 @@
+#!/bin/bash
+
+ruby -I../../SNES_Utils/lib/ ../../SNES_Utils/bin/png2snes -f tiles.png -m -a 000000
