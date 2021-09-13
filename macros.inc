@@ -81,8 +81,10 @@
     lda #^%src_addr
     sta A1T0B
 
+    rep #20
     lda #%nb_bytes
     sta DAS0L
+    sep #20
 
     lda #00
     sta DMAP0
