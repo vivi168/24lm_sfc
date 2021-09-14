@@ -48,7 +48,7 @@ FastReset:
     jsr @InitOamBuffer
     jsr @InitTiles
 
-    ldx #da0e
+    ldx #3208
     jsr @InitTileMap
 
 ;  ---- DMA Transfers

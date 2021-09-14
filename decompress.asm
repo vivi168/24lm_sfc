@@ -114,7 +114,6 @@ decode_loop:
     beq @decode_done
     stx @j
 
-    ; brk 00
     jsr @BufferLoop
 
     bra @decode_loop

@@ -25,8 +25,8 @@
 MainLoop:
     jsr @WaitNextVBlank
 
-    inc @horizontal_offset
-    inc @vertical_offset
+    ; inc @horizontal_offset
+    ; inc @vertical_offset
 
     jmp @MainLoop
 
