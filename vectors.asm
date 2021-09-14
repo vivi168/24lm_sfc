@@ -31,10 +31,25 @@ FastReset:
     sta OBJSEL          ; oam start @VRAM[c000]
 
 ;  ---- Some initialization
+
+; Writing a <new> byte to one of the write-twice M7'registers does:
+; M7_reg = new * 100h + M7_old
+; M7_old = new
+    lda @horizontal_offset
+    sta BG1HOFS
+    lda @horizontal_offset+1
+    sta BG1HOFS
+    lda @vertical_offset
+    sta BG1VOFS
+    lda @vertical_offset+1
+    sta BG1VOFS
+
     jsr @InitLzssDecode
     jsr @InitOamBuffer
-    jsr @InitLevel
-    jsr @CopyInitialColumns
+    jsr @InitTiles
+
+    ldx #da0e
+    jsr @InitTileMap
 
 ;  ---- DMA Transfers
     .call VRAM_DMA_TRANSFER 0000, bg1_buffer, BG1_BUFFER_SIZE
@@ -81,6 +96,15 @@ FastNmi:
     lda RDNMI
 
     inc @frame_counter
+
+    lda @horizontal_offset
+    sta BG1HOFS
+    lda @horizontal_offset+1
+    sta BG1HOFS
+    lda @vertical_offset
+    sta BG1VOFS
+    lda @vertical_offset+1
+    sta BG1VOFS
 
     jsr @ReadJoyPad1
 

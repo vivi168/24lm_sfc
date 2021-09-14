@@ -146,3 +146,16 @@
 
     pld
 .endm
+
+.macro MULTIPLY
+    lda @multiplicand
+    sta WRMPYA  ; Multiplicand
+    lda @multiplier
+    sta WRMPYB  ; Multiplier
+    nop         ; wait 8 cycles
+    nop
+    nop
+    nop
+    ; lda RDMPYL  ; Mul Product, lower byte
+    ; lda RDMPYH  ; Mul Product, higher byte
+.endm

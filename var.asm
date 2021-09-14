@@ -10,6 +10,9 @@ vblank_disable:           .rb 1
 horizontal_offset:        .rb 2
 vertical_offset:          .rb 2
 
+multiplicand:             .rb 1
+multiplier:               .rb 1
+
 hex_to_dec_in:            .rb 2
 hex_to_dec_out:           .rb 3
 

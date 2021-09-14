@@ -25,6 +25,9 @@
 MainLoop:
     jsr @WaitNextVBlank
 
+    inc @horizontal_offset
+    inc @vertical_offset
+
     jmp @MainLoop
 
 .include info.asm
