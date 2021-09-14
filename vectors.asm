@@ -49,6 +49,7 @@ FastReset:
     jsr @InitTiles
 
     ldx #3208
+    ; ldx #9cc0
     jsr @InitTileMap
 
 ;  ---- DMA Transfers

@@ -22,7 +22,8 @@ init_level_loop:
 	rts
 
 ; copy initial 128x128 tilemap to BG Buffer
-; input X, Y in X
+; (64x64 portion from circuit)
+; input coordinates X, Y in X
 InitTileMap:
     .call RESERVE_STACK_FRAME 09
     ; 01 02 03 : bg1_buffer address
@@ -66,29 +67,50 @@ init_tilemap_loop:
 
     ; ---- get metatile info
     phx
+    phy
     and #00ff
     asl
     asl
     tax
     .call M8
+    ; Y
     lda !metatiles,x
     sta [01],y
+
+    ; Y + 2
     iny
     iny
     lda !metatiles+1,x
     sta [01],y
-    iny
-    iny
+
+    ; Y + 256
+    .call M16
+    tya
+    clc
+    adc #00fe
+    tay
+    .call M8
     lda !metatiles+2,x
     sta [01],y
+
+    ; y + 258
     iny
     iny
     lda !metatiles+3,x
     sta [01],y
-    iny
-    iny
+
     .call M16
+    ply
     plx
+
+    tya
+    clc
+    adc #0004
+    bit #00ff
+    bne @skip_y_wrap
+    adc #0100
+skip_y_wrap:
+    tay
     ; ----
 
     inx
@@ -98,7 +120,7 @@ init_tilemap_loop:
     bne @skip_wrap_row
     txa
     clc
-    adc #01c0
+    adc #00c0
     tax
     lda 08
 skip_wrap_row:
