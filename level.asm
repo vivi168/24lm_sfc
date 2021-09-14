@@ -59,6 +59,7 @@ InitTileMap:
     adc 04	; X
     tax     ; initial index. loop from there
 
+    ldy #0000
 init_tilemap_loop:
     ; metatile idx
     lda !circuit,x
@@ -71,9 +72,21 @@ init_tilemap_loop:
     tax
     .call M8
     lda !metatiles,x
+    sta [01],y
+    iny
+    iny
     lda !metatiles+1,x
+    sta [01],y
+    iny
+    iny
     lda !metatiles+2,x
+    sta [01],y
+    iny
+    iny
     lda !metatiles+3,x
+    sta [01],y
+    iny
+    iny
     .call M16
     plx
     ; ----
@@ -81,15 +94,15 @@ init_tilemap_loop:
     inx
     inc 08
     lda 08
-    bit #001f
+    bit #003f
     bne @skip_wrap_row
     txa
     clc
-    adc #00e0
+    adc #01c0
     tax
     lda 08
 skip_wrap_row:
-    cmp #0400
+    cmp #1000
     bne @init_tilemap_loop
 
     .call M8
