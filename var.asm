@@ -41,7 +41,7 @@ outfile_idx:               .rb 2   ; index to current outfile byte
 
 .org 7e2000
 
-bg1_buffer:               .rb 8000
+bg1_buffer:               .rb 4000
 oam_buffer:               .rb 200
 oam_buffer_hi:            .rb 20
 decompression_buffer:     .rb 1000 ; decompression buffer

@@ -46,14 +46,22 @@ FastReset:
 
     jsr @InitLzssDecode
     jsr @InitOamBuffer
-    jsr @InitTiles
 
     ldx #3208
     ; ldx #9cc0
     jsr @InitTileMap
 
 ;  ---- DMA Transfers
-    .call VRAM_DMA_TRANSFER 0000, bg1_buffer, BG1_BUFFER_SIZE
+
+    ; transfer tilemap (write low byte of VRAM, then inc)
+    lda #00
+    sta VMAINC
+    .call VRAM_DMA_TRANSFER_TEST 0000, bg1_buffer, 4000, 18
+
+    ; transfer tiles (write high byte of VRAM, then inc)
+    lda #80
+    sta VMAINC
+    .call VRAM_DMA_TRANSFER_TEST 0000, bg1_tiles, 4000, 19
     .call VRAM_DMA_TRANSFER 6000, sprites_tiles, SPRITES_TILES_SIZE   ; VRAM[0xc000] (word step)
 
     .call CGRAM_DMA_TRANSFER 00, bg1_pal, BG1_PALETTE_SIZE

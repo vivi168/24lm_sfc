@@ -1,26 +1,3 @@
-; copy each tile data to BG buffer
-InitTiles:
-    ldx #0000
-    ldy #0000
-init_level_loop:
-
-    ; lda #00
-    ; sta !bg1_buffer,x
-    inx
-
-    phx
-    tyx
-    iny
-    lda !bg1_tiles,x
-    plx
-    sta !bg1_buffer,x
-
-    inx
-    cpx #8000
-    bne @init_level_loop
-
-	rts
-
 ; copy initial 128x128 tilemap to BG Buffer
 ; (64x64 portion from circuit)
 ; input coordinates X, Y in X
@@ -77,24 +54,22 @@ init_tilemap_loop:
     lda !metatiles,x
     sta [01],y
 
-    ; Y + 2
-    iny
+    ; Y + 1
     iny
     lda !metatiles+1,x
     sta [01],y
 
-    ; Y + 256
+    ; Y + 128
     .call M16
     tya
     clc
-    adc #00fe
+    adc #007f
     tay
     .call M8
     lda !metatiles+2,x
     sta [01],y
 
-    ; y + 258
-    iny
+    ; y + 129
     iny
     lda !metatiles+3,x
     sta [01],y
@@ -104,11 +79,11 @@ init_tilemap_loop:
     plx
 
     tya
-    clc
-    adc #0004
-    bit #00ff
+    inc
+    inc
+    bit #007f
     bne @skip_y_wrap
-    adc #0100
+    adc #0080
 skip_y_wrap:
     tay
     ; ----
