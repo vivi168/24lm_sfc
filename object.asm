@@ -34,3 +34,22 @@ set_x_msb:
 
     plp
     rts
+
+
+UpdatePlayerOAM:
+    lda @player_sx
+    sta !oam_buffer     ; x
+    lda @player_sy
+    sta !oam_buffer+1   ; y
+
+    lda #00
+    sta !oam_buffer+2   ; tile number
+
+    lda #30             ; 00110000
+    sta !oam_buffer+3   ; vhppcccn
+
+    lda #54
+    sta !oam_buffer_hi
+
+    rts
+

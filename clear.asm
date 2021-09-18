@@ -103,6 +103,17 @@ ClearRegisters:
     stz @next_row_read
     stz @next_row_write
 
+    stz @player_x
+    stz @player_y
+    stz @player_angle
+    ldx @player_angle
+    lda !cosines_lut,x
+    and #00ff
+    sta @player_dx
+
+    lda !sines_lut,x
+    and #00ff
+    sta @player_dy
     .call M8
 
     stz @frame_counter

@@ -25,9 +25,37 @@
 MainLoop:
     jsr @WaitNextVBlank
 
+    jsr @HandleInput
     ; inc @horizontal_offset
     ; inc @vertical_offset
 
+    jsr @UpdatePlayer
+    jsr @UpdatePlayerOAM
+
     jmp @MainLoop
+
+UpdatePlayer:
+    .call M16
+
+    lda @player_x
+    lsr
+    lsr
+    lsr
+    lsr
+    lsr
+    lsr
+    sta @player_sx
+
+    lda @player_y
+    lsr
+    lsr
+    lsr
+    lsr
+    lsr
+    lsr
+    sta @player_sy
+
+    .call M8
+    rts
 
 .include info.asm

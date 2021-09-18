@@ -115,6 +115,7 @@ FastNmi:
     lda @vertical_offset+1
     sta BG1VOFS
 
+    jsr @TransferOamBuffer
     jsr @ReadJoyPad1
 
     inc @vblank_disable

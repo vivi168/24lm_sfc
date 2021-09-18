@@ -15,6 +15,11 @@
 .define F  11
 .define NF 07ef ; N - F
 
+; joypad
+.define BUTTON_A     0080
+.define BUTTON_LEFT  0200
+.define BUTTON_RIGHT 0100
+
 ; OAM
 .define OAML_SIZE   0200
 .define OAM_SIZE    0220

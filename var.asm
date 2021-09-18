@@ -21,6 +21,15 @@ next_column_write:        .rb 2
 next_row_read:            .rb 2
 next_row_write:           .rb 2
 
+player_angle:             .rb 2 ; angle * 4 (for calculation)
+player_x:                 .rb 2 ; position for calculation
+player_y:                 .rb 2 ; position for calculation
+player_dx:                .rb 2
+player_dy:                .rb 2
+
+player_sx:                .rb 2 ; position on screen
+player_sy:                .rb 2 ; position on screen
+
 ; ---- for decompression
 r:                      .rb 2
 i:                      .rb 2
