@@ -25,3 +25,31 @@
 .define OAM_SIZE    0220
 
 .define SPC_ROM_SIZE 0002
+
+
+
+;;;;;
+
+
+; Game level calculations
+.define WORLD_W 1000
+.define WORLD_H 1000
+
+.define MAP_W 100
+.define MAP_H 100
+.define MAP_SIZE 10000
+.define MAP_CELL_SIZE 10
+
+; mode 7 tilemap buffer (1024x1024 px)
+.define BUF_W 80
+.define BUF_H 80
+.define BUF_SIZE 4000
+.define BUF_CELL_SIZE 8
+
+.define METATILES_SIZE 400
+
+.define SCREEN_W 100
+.define SCREEN_H e0
+
+.define SPRITE_W 10
+.define SPRITE_H 10

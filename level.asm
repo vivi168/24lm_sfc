@@ -33,8 +33,8 @@ InitTileMap:
     .call M16
     lda RDMPYL
     clc
-    adc 06	; Y (add one more time, multiplied by 0xff, we want by 0x100)
-    adc 04	; X
+    adc 06	; Y (add one more time, multiplied by 0xff, we want Y * 0x100)
+    adc 04	; add X (I = X + W * Y)
     tax     ; initial index. loop from there
 
     ldy #0000

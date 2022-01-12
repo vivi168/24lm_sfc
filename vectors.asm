@@ -44,6 +44,21 @@ FastReset:
     lda @vertical_offset+1
     sta BG1VOFS
 
+    ; lda #00
+    ; sta M7A
+    ; lda #02
+    ; sta M7A
+
+    ; lda #80
+    ; sta M7C
+    ; lda #00
+    ; sta M7C
+
+    ; lda #00
+    ; sta M7D
+    ; lda #01
+    ; sta M7D
+
     jsr @InitLzssDecode
     jsr @InitOamBuffer
 
