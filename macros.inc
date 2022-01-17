@@ -22,6 +22,13 @@
     rep #30
 .endm
 
+; multiply by 8
+.macro ASL3
+    asl
+    asl
+    asl
+.endm
+
 ; multiply by 16
 .macro ASL4
     asl

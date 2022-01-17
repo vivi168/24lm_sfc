@@ -97,7 +97,7 @@ set_angle:
     sta @player_angle
 
 ronre:
-    brk 00
+    ; brk 00
 exit_handle_input:
     .call M8
     ldx @player_angle
@@ -128,4 +128,3 @@ isse2:
 sin_end:
     plp
     rts
-

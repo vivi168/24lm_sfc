@@ -62,9 +62,39 @@ FastReset:
     jsr @InitLzssDecode
     jsr @InitOamBuffer
 
-    ldx #3208
+    ; ldx #3208
     ; ldx #9cc0
-    jsr @InitTileMap
+    ; ldx #0000
+    ; jsr @InitTileMap
+
+
+    ldy #0000
+    sty @ax
+    ldy #0000
+    sty @bx
+    ldy #0000
+    sty @cx
+    sty @dx
+init_tile_cols:
+    ldx @ax
+    phx
+    phy
+
+    brk 00
+    jsr @CopyColumn
+    ply
+    plx
+    stx @ax
+
+    .call M16
+    inc @ax
+    inc @cx
+    inc @cx
+    .call M8
+
+    iny
+    cpy #0040 ; 64 x2 tiles columns
+    bne @init_tile_cols
 
 ;  ---- DMA Transfers
 
