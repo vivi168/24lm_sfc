@@ -7,13 +7,9 @@
 InitTileMap:
     ldy #0000 ; loop counter
 init_tilemap_loop:
-    ldx @ax
-    phx
     phy
     jsr @CopyColumn
     ply
-    plx
-    stx @ax
 
     .call M16
     inc @ax ; src_x ++
@@ -39,7 +35,7 @@ CopyColumn:
     .call RESERVE_STACK_FRAME 08
     ; 01/02    -> src_i
     ; 03/04    -> dst_i
-    ; 05       -> mi
+    ; 05       -> loop counter
     ; 06/07/08 -> bg_buffer addr
 
     ldx #@bg1_buffer
@@ -64,7 +60,7 @@ CopyColumn:
     .call M8
 
     ; loop counter
-    stz @al
+    stz 05
 copy_column_loop:
 
     ; uint8_t mi = circuit[src_i];
@@ -125,8 +121,8 @@ copy_column_loop:
 
     .call M8
 
-    inc @al
-    lda @al
+    inc 05
+    lda 05
     cmp #40 ; 64 x2 tiles columns (BUF_H / 2)
     bne @copy_column_loop
 
