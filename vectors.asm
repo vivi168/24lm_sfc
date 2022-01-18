@@ -67,20 +67,21 @@ FastReset:
     ; ldx #0000
     ; jsr @InitTileMap
 
+    ldy #009c
+    sty @ax
+    ldy #00c0
+    sty @bx
+    ldy #0060
+    sty @cx
+    ldy #0070
+    sty @dx
 
     ldy #0000
-    sty @ax
-    ldy #0000
-    sty @bx
-    ldy #0000
-    sty @cx
-    sty @dx
 init_tile_cols:
     ldx @ax
     phx
     phy
 
-    brk 00
     jsr @CopyColumn
     ply
     plx
@@ -88,8 +89,13 @@ init_tile_cols:
 
     .call M16
     inc @ax
-    inc @cx
-    inc @cx
+
+    lda @cx
+    inc
+    inc
+    and #007f
+    sta @cx
+
     .call M8
 
     iny
