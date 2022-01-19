@@ -138,7 +138,7 @@ CopyRow:
     .call RESERVE_STACK_FRAME 08
     ; 01/02    -> src_i
     ; 03/04    -> dst_i
-    ; 05       -> mi
+    ; 05       -> loop counter
     ; 06/07/08 -> bg_buffer addr
 
     ldx #@bg1_buffer
@@ -163,7 +163,7 @@ CopyRow:
     .call M8
 
     ; loop counter
-    stz @al
+    stz 05
 copy_row_loop:
 
     ; uint8_t mi = circuit[src_i];
@@ -238,8 +238,8 @@ skip_row_wrap1:
 skip_row_wrap2:
     .call M8
 
-    inc @al
-    lda @al
+    inc 05
+    lda 05
     cmp #40 ; 64 x2 tiles rows
     bne @copy_row_loop
 
