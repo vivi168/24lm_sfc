@@ -64,15 +64,16 @@ FastReset:
 
 ;  ---- Init tile map
 
-    ldy #009c ; src X
+    ldy #0000 ; src X
     sty @ax
-    ldy #00c0 ; src Y
+    ldy #0000 ; src Y
     sty @bx
-    ldy #0060 ; dst X
+    ldy #0000 ; dst X
     sty @cx
-    ldy #0070 ; dst Y
+    ldy #0000 ; dst Y
     sty @dx
     jsr @InitTileMap
+    ; jsr @CopyRow
 
 ;  ---- DMA Transfers
 

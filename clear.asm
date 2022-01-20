@@ -108,11 +108,9 @@ ClearRegisters:
     stz @player_angle
     ldx @player_angle
     lda !cosines_lut,x
-    and #00ff
     sta @player_dx
 
     lda !sines_lut,x
-    and #00ff
     sta @player_dy
     .call M8
 

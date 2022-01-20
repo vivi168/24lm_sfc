@@ -30,6 +30,7 @@ MainLoop:
     ; inc @vertical_offset
 
     jsr @UpdatePlayer
+    jsr @CenterCam
     jsr @UpdatePlayerOAM
 
     jmp @MainLoop
@@ -38,6 +39,8 @@ UpdatePlayer:
     .call M16
 
     lda @player_x
+    lsr
+    lsr
     lsr
     lsr
     lsr
@@ -53,9 +56,14 @@ UpdatePlayer:
     lsr
     lsr
     lsr
+    lsr
+    lsr
     sta @player_sy
 
     .call M8
+    rts
+
+CenterCam:
     rts
 
 .include info.asm

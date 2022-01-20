@@ -40,7 +40,7 @@ HandleInput:
     bit #BUTTON_A
     bne @accelerate
 
-ronrure:
+check_direction_keys:
     lda @joy1_held
     bit #BUTTON_LEFT
     bne @turn_left
@@ -62,7 +62,7 @@ accelerate:
     adc @player_dy
     sta @player_y
 
-    bra @ronrure
+    bra @check_direction_keys
 
 turn_left:
     lda @player_angle
@@ -97,33 +97,14 @@ set_angle:
     sta @player_angle
 
 exit_handle_input:
-    .call M8
-    ldx @player_angle
+    lda @player_angle
+    asl ; entries are two bytes
+    tax
     lda !cosines_lut,x
-    bpl @isse1
-    .call M16
-    ora #ff00
     sta @player_dx
-    bra @sin_test
-isse1:
-    .call M16
-    and #00ff
-    sta @player_dx
-
-sin_test:
-    .call M8
     lda !sines_lut,x
-    bpl @isse2
-    .call M16
-    ora #ff00
-    sta @player_dy
-    bra @sin_end
-isse2:
-    .call M16
-    and #00ff
     sta @player_dy
 
-sin_end:
     plp
     rts
 
