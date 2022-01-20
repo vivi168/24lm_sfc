@@ -15,6 +15,7 @@
 .include vectors.asm
 .include clear.asm
 .include dma.asm
+.include math.asm
 .include joypad.asm
 .include level.asm
 .include object.asm
