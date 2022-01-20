@@ -86,18 +86,16 @@ turn_right:
 keep_angle_in_bound:
     lda @player_angle
     bmi @set_angle ; < 0 ? -> 359
-    cmp #0168 ; #0168 ; >= 360 ? -> 0
+    cmp #0168 ; >= 360 ? -> 0
     bcs @reset_angle
-    bra @ronre
+    bra @exit_handle_input
 reset_angle:
     stz @player_angle
-    bra @ronre
+    bra @exit_handle_input
 set_angle:
-    lda #0167 ; #0167
+    lda #0167 ; angle = 359
     sta @player_angle
 
-ronre:
-    ; brk 00
 exit_handle_input:
     .call M8
     ldx @player_angle
