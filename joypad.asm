@@ -91,27 +91,14 @@ add_y_coord:
     lda @bx
     sta @player_fy_hi
 
-
     bra @check_direction_keys
 
 turn_left:
-    lda @player_angle
-    dec
-    dec
-    dec
-    sta @player_angle
-
+    dec @player_angle
     bra @keep_angle_in_bound
 
 turn_right:
-    lda @player_angle
-    inc
-    inc
-    inc
-    sta @player_angle
-
-    bra @keep_angle_in_bound
-
+    inc @player_angle
 
 keep_angle_in_bound:
     lda @player_angle
