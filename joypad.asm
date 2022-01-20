@@ -52,15 +52,45 @@ check_direction_keys:
     jmp @exit_handle_input
 
 accelerate:
-    lda @player_x
-    clc
-    adc @player_dx
-    sta @player_x
+    ; X coordinate
+    lda @player_fx_lo
+    sta @ax
+    lda @player_fx_hi
+    sta @bx
 
-    lda @player_y
-    clc
-    adc @player_dy
-    sta @player_y
+    stz @dx
+    lda @player_dx
+    sta @cx
+
+    bpl @add_x_coord
+    dec @dx ; wrap dx at 0xffff (negative)
+add_x_coord:
+    jsr @Add32
+    lda @ax
+    sta @player_fx_lo
+    lda @bx
+    sta @player_fx_hi
+
+
+    ; Y coordinate
+    lda @player_fy_lo
+    sta @ax
+    lda @player_fy_hi
+    sta @bx
+
+    stz @dx
+    lda @player_dy
+    sta @cx
+
+    bpl @add_y_coord
+    dec @dx ; wrap dx at 0xffff (negative)
+add_y_coord:
+    jsr @Add32
+    lda @ax
+    sta @player_fy_lo
+    lda @bx
+    sta @player_fy_hi
+
 
     bra @check_direction_keys
 
@@ -114,6 +144,10 @@ exit_handle_input:
 ; input num2: cx(lo), dx(hi)
 ; result in ax(lo), bx(hi)
 Add32:
+    php
+
+    .call M8
+
     .call RESERVE_STACK_FRAME 04
     ; 01/02 03/04 -> result
 
@@ -136,6 +170,8 @@ Add32:
 
     .call M8
     .call RESTORE_STACK_FRAME 04
+
+    plp
     rts
 
 ; 32 bits LSR
@@ -143,14 +179,18 @@ Add32:
 ; @bx -> input hi / result hi
 ; @cl -> amount to shift
 Lsr32:
+    php
+
+lsr_32_loop:
     .call M16
     lsr @bx
     ror @ax
 
     .call M8
     dec @cl
-    bne @Lsr32
+    bne @lsr_32_loop
 
+    plp
     rts
 
 ; 32 bits ASL
@@ -158,12 +198,16 @@ Lsr32:
 ; @bx -> input hi / result hi
 ; @cl -> amount to shift
 Asl32:
+    php
+
+asl_32_loop:
     .call M16
     asl @ax
     rol @bx
 
     .call M8
     dec @cl
-    bne @Asl32
+    bne @asl_32_loop
 
+    plp
     rts

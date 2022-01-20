@@ -38,26 +38,26 @@ MainLoop:
 UpdatePlayer:
     .call M16
 
-    lda @player_x
-    lsr
-    lsr
-    lsr
-    lsr
-    lsr
-    lsr
-    lsr
-    lsr
+    ; X coord
+    lda @player_fx_lo
+    sta @ax
+    lda @player_fx_hi
+    sta @bx
+    lda #000a ; fixed point scale is 1024
+    sta @cx
+    jsr @Lsr32
+    lda @ax
     sta @player_sx
 
-    lda @player_y
-    lsr
-    lsr
-    lsr
-    lsr
-    lsr
-    lsr
-    lsr
-    lsr
+    ; Y coord
+    lda @player_fy_lo
+    sta @ax
+    lda @player_fy_hi
+    sta @bx
+    lda #000a ; fixed point scale is 1024
+    sta @cx
+    jsr @Lsr32
+    lda @ax
     sta @player_sy
 
     .call M8

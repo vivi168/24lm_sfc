@@ -112,6 +112,12 @@ ClearRegisters:
 
     lda !sines_lut,x
     sta @player_dy
+
+    stz @player_fx_hi
+    stz @player_fx_lo
+    stz @player_fy_hi
+    stz @player_fy_lo
+
     .call M8
 
     stz @frame_counter
