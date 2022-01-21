@@ -37,6 +37,20 @@ set_x_msb:
 
 
 UpdatePlayerOAM:
+    .call M16
+    ; player.screen_x = player.x - camera.x;
+    lda @player_x
+    sec
+    sbc @camera_x
+    sta @player_sx
+
+    ; player.screen_y = player.y - camera.y;
+    lda @player_y
+    sec
+    sbc @camera_y
+    sta @player_sy
+    .call M8
+
     lda @player_sx
     sta !oam_buffer     ; x
     lda @player_sy
@@ -52,4 +66,3 @@ UpdatePlayerOAM:
     sta !oam_buffer_hi
 
     rts
-

@@ -27,8 +27,6 @@ MainLoop:
     jsr @WaitNextVBlank
 
     jsr @HandleInput
-    ; inc @horizontal_offset
-    ; inc @vertical_offset
 
     jsr @UpdatePlayer
     jsr @CenterCam
@@ -48,7 +46,7 @@ UpdatePlayer:
     sta @cx
     jsr @Lsr32
     lda @ax
-    sta @player_sx
+    sta @player_x
 
     ; Y coord
     lda @player_fy_lo
@@ -59,12 +57,36 @@ UpdatePlayer:
     sta @cx
     jsr @Lsr32
     lda @ax
-    sta @player_sy
+    sta @player_y
 
     .call M8
     rts
 
 CenterCam:
+    .call M16
+
+    ; camera.x = player.x - SCREEN_W/2
+    lda @player_x
+    sec
+    sbc #0080
+    sta @camera_x
+
+    ; screen.x = camera.x % 1024;
+    and #03ff
+    sta @horizontal_offset
+
+    ; camera.y = player.y - SCREEN_H/2
+    lda @player_y
+    sec
+    sbc #0070
+    sta @camera_y
+
+    ; screen.y = camera.y % 1024;
+    and #03ff
+    sta @vertical_offset
+
+    .call M8
+
     rts
 
 .include info.asm
