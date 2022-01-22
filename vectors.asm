@@ -35,13 +35,13 @@ FastReset:
 ; Writing a <new> byte to one of the write-twice M7'registers does:
 ; M7_reg = new * 100h + M7_old
 ; M7_old = new
-    lda @horizontal_offset
+    lda @screen_x
     sta BG1HOFS
-    lda @horizontal_offset+1
+    lda @screen_x+1
     sta BG1HOFS
-    lda @vertical_offset
+    lda @screen_y
     sta BG1VOFS
-    lda @vertical_offset+1
+    lda @screen_y+1
     sta BG1VOFS
 
     ; lda #00
@@ -130,13 +130,13 @@ FastNmi:
 
     inc @frame_counter
 
-    lda @horizontal_offset
+    lda @screen_x
     sta BG1HOFS
-    lda @horizontal_offset+1
+    lda @screen_x+1
     sta BG1HOFS
-    lda @vertical_offset
+    lda @screen_y
     sta BG1VOFS
-    lda @vertical_offset+1
+    lda @screen_y+1
     sta BG1VOFS
 
     jsr @TransferOamBuffer

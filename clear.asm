@@ -95,8 +95,8 @@ ClearRegisters:
     stz @joy1_raw
     stz @joy1_press
     stz @joy1_held
-    stz @horizontal_offset
-    stz @vertical_offset
+    stz @screen_x
+    stz @screen_y
 
     stz @next_column_read
     stz @next_column_write

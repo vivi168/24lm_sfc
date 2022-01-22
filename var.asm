@@ -25,8 +25,8 @@ joy1_held:                .rb 2
 frame_counter:            .rb 1
 vblank_disable:           .rb 1
 
-horizontal_offset:        .rb 2
-vertical_offset:          .rb 2
+screen_x:        .rb 2
+screen_y:          .rb 2
 
 multiplicand:             .rb 1
 multiplier:               .rb 1

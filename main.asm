@@ -90,7 +90,7 @@ going_left_cc:
 ; ---- Check vertical offset
 end_column_update:
 skip_column_update:
-    lda @vertical_offset
+    lda @screen_y
     bit #000f
     bne @skip_row_update
 
@@ -114,7 +114,7 @@ CenterCam:
 
     ; screen.x = camera.x % 1024;
     and #03ff
-    sta @horizontal_offset
+    sta @screen_x
 
 ; ---- Y coordinate
 
@@ -126,7 +126,7 @@ CenterCam:
 
     ; screen.y = camera.y % 1024;
     and #03ff
-    sta @vertical_offset
+    sta @screen_y
 
     .call M8
 
