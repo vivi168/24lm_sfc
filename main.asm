@@ -77,13 +77,13 @@ UpdatePlayer:
     beq @skip_column_update
     bcc @going_left_cc
 ; going right
-    brk ff
+    ; brk ff
     ; TODO copy column ahead
 
     bra @end_column_update
 going_left_cc:
 ; going left
-    brk 00
+    ; brk 00
     ; TODO copy column behind
 
 
@@ -102,7 +102,15 @@ skip_row_update:
     rts
 
 CenterCam:
+    .call RESERVE_STACK_FRAME 04
+    ; 01/02 -> prev camera_x
+    ; 03/04 -> prev camera_y
     .call M16
+
+    lda @camera_x
+    sta 01
+    lda @camera_y
+    sta 03
 
 ; ---- X coordinate
 
@@ -113,6 +121,10 @@ CenterCam:
     sta @camera_x
 
     ; screen.x = camera.x % 1024;
+    sec
+    sbc 01
+    clc
+    adc @screen_x
     and #03ff
     sta @screen_x
 
@@ -125,10 +137,15 @@ CenterCam:
     sta @camera_y
 
     ; screen.y = camera.y % 1024;
+    sec
+    sbc 03
+    clc
+    adc @screen_y
     and #03ff
     sta @screen_y
 
     .call M8
+    .call RESTORE_STACK_FRAME 04
 
     rts
 

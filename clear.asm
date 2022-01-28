@@ -95,16 +95,16 @@ ClearRegisters:
     stz @joy1_raw
     stz @joy1_press
     stz @joy1_held
-    stz @screen_x
-    stz @screen_y
+    ; stz @screen_x
+    ; stz @screen_y
 
     stz @next_column_read
     stz @next_column_write
     stz @next_row_read
     stz @next_row_write
 
-    stz @player_x
-    stz @player_y
+    ; stz @player_x
+    ; stz @player_y
     stz @player_angle
     ldx @player_angle
     lda !cosines_lut,x
@@ -113,15 +113,79 @@ ClearRegisters:
     lda !sines_lut,x
     sta @player_dy
 
-    stz @player_fx_hi
-    stz @player_fx_lo
-    stz @player_fy_hi
-    stz @player_fy_lo
-
+    ; stz @player_fx_hi
+    ; stz @player_fx_lo
+    ; stz @player_fy_hi
+    ; stz @player_fy_lo
     .call M8
 
     stz @frame_counter
     stz @vblank_disable
     inc @vblank_disable
 
+    rts
+
+
+InitialSettings:
+    php
+
+    ; .call RESERVE_STACK_FRAME 04
+    ; 01/02 -> buffer_x
+    ; 03/04 -> buffer_y
+
+    .call M16
+
+    ; player X
+    lda #0450
+    sta @player_x
+    sta @ax
+    stz @bx
+    lda #000a ; shift by 10
+    sta @cx
+    jsr @Asl32
+    lda @ax
+    sta @player_fx_lo
+    lda @bx
+    sta @player_fx_hi
+
+    ; player Y - 768
+    lda #0300
+    sta @player_y
+    sta @ax
+    stz @bx
+    lda #000a ; shift by 10
+    sta @cx
+    jsr @Asl32
+    lda @ax
+    sta @player_fy_lo
+    lda @bx
+    sta @player_fy_hi
+
+    ; SCREEN_OFFSET_X
+    lda #0188
+    sta @screen_x
+    ; SCREEN_OFFSET_Y
+    lda #0128
+    sta @screen_y
+
+    ; camera X = player_x - SCREEN_W / 2
+    lda @player_x
+    sec
+    sbc #0080
+    sta @camera_x
+    sbc @screen_x
+    sta @ax
+
+    ; camera Y = player_y - SCREEN_H / 2
+    lda @player_y
+    sec
+    sbc #0070
+    sta @camera_y
+    sbc @screen_y
+    sta @bx
+
+
+    ; .call RESTORE_STACK_FRAME 04
+
+    plp
     rts

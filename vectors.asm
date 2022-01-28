@@ -35,14 +35,6 @@ FastReset:
 ; Writing a <new> byte to one of the write-twice M7'registers does:
 ; M7_reg = new * 100h + M7_old
 ; M7_old = new
-    lda @screen_x
-    sta BG1HOFS
-    lda @screen_x+1
-    sta BG1HOFS
-    lda @screen_y
-    sta BG1VOFS
-    lda @screen_y+1
-    sta BG1VOFS
 
     ; lda #00
     ; sta M7A
@@ -64,16 +56,40 @@ FastReset:
 
 ;  ---- Init tile map
 
-    ldy #0000 ; src X
-    sty @ax
-    ldy #0000 ; src Y
-    sty @bx
-    ldy #0000 ; dst X
-    sty @cx
-    ldy #0000 ; dst Y
-    sty @dx
+    ; ldy #0024 ; src X
+    ; sty @ax
+    ; ldy #0016 ; src Y
+    ; sty @bx
+    ; ldy #0000 ; dst X
+    ; sty @cx
+    ; ldy #0000 ; dst Y
+    ; sty @dx
+    jsr @InitialSettings
+    .call M16
+    lda @ax
+    .call LSR4
+    sta @ax
+
+    lda @bx
+    .call LSR4
+    sta @bx
+
+
+    stz @cx
+    stz @dx
+    .call M8
     jsr @InitTileMap
     ; jsr @CopyRow
+
+    brk 00
+    lda @screen_x
+    sta BG1HOFS
+    lda @screen_x+1
+    sta BG1HOFS
+    lda @screen_y
+    sta BG1VOFS
+    lda @screen_y+1
+    sta BG1VOFS
 
 ;  ---- DMA Transfers
 
