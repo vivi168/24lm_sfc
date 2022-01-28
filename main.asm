@@ -120,7 +120,7 @@ CenterCam:
     sbc #0080
     sta @camera_x
 
-    ; screen.x = camera.x % 1024;
+    ; screen.x += (camera.x - camera.prev_x) % 1024
     sec
     sbc 01
     clc
@@ -136,7 +136,7 @@ CenterCam:
     sbc #0070
     sta @camera_y
 
-    ; screen.y = camera.y % 1024;
+    ; screen.y += (camera.y - camera.prev_y) % 1024
     sec
     sbc 03
     clc
