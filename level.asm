@@ -129,21 +129,20 @@ copy_column_loop:
     .call RESTORE_STACK_FRAME 08
     rts
 
-; update one row of tilemap
+; copy next row in next_row
 ; ax -> src_x
 ; bx -> src_y
 ; cx -> dst_x
-; dx -> dst_y
-CopyRow:
+CopyNextRow:
     .call RESERVE_STACK_FRAME 08
     ; 01/02    -> src_i
     ; 03/04    -> dst_i
     ; 05       -> loop counter
     ; 06/07/08 -> bg_buffer addr
 
-    ldx #@bg1_buffer
+    ldx #@next_row
     stx 06
-    lda #^bg1_buffer
+    lda #^next_row
     sta 08
 
     .call M16
@@ -154,11 +153,7 @@ CopyRow:
     adc @ax
     sta 01
 
-    lda @dx
-    .call ASL3
-    .call ASL4 ; dx *= 128 (BUF_W)
-    clc
-    adc @cx
+    lda @cx
     sta 03
     .call M8
 
@@ -177,18 +172,18 @@ copy_row_loop:
     tax
     .call M8
 
-    ; bg1_buffer[dst_i]         = metatiles[mi * 4]
+    ; next_row[dst_i]         = metatiles[mi * 4]
     lda !metatiles,x
     ldy 03
     sta [06],y
 
-    ; bg1_buffer[dst_i+1]       = metatiles[mi * 4 + 1]
+    ; next_row[dst_i+1]       = metatiles[mi * 4 + 1]
     iny
     inx
     lda !metatiles,x
     sta [06],y
 
-    ; bg1_buffer[dst_i+BUF_W]   = metatiles[mi * 4 + 2]
+    ; next_row[dst_i+BUF_W]   = metatiles[mi * 4 + 2]
     .call M16
     lda 03
     clc
@@ -200,7 +195,7 @@ copy_row_loop:
     lda !metatiles,x
     sta [06],y
 
-    ; bg1_buffer[dst_i+BUF_W+1] = metatiles[mi * 4 + 3]
+    ; next_row[dst_i+BUF_W+1] = metatiles[mi * 4 + 3]
     iny
     inx
     lda !metatiles,x

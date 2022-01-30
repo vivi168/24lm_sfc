@@ -34,10 +34,9 @@ multiplier:               .rb 1
 hex_to_dec_in:            .rb 2
 hex_to_dec_out:           .rb 3
 
-next_column_read:         .rb 2
-next_column_write:        .rb 2
-next_row_read:            .rb 2
-next_row_write:           .rb 2
+; next col/row offset
+next_col_x:               .rb 2
+next_row_y:               .rb 2
 
 ; struct point player
 player_fx:
@@ -82,6 +81,8 @@ outfile_idx:               .rb 2   ; index to current outfile byte
 .org 7e2000
 
 bg1_buffer:               .rb 4000
+next_row:                 .rb 100
+next_col:                 .rb 100
 oam_buffer:               .rb 200
 oam_buffer_hi:            .rb 20
 decompression_buffer:     .rb 1000 ; decompression buffer

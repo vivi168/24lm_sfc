@@ -95,16 +95,10 @@ ClearRegisters:
     stz @joy1_raw
     stz @joy1_press
     stz @joy1_held
-    ; stz @screen_x
-    ; stz @screen_y
 
-    stz @next_column_read
-    stz @next_column_write
-    stz @next_row_read
-    stz @next_row_write
+    stz @next_col_x
+    stz @next_row_y
 
-    ; stz @player_x
-    ; stz @player_y
     stz @player_angle
     ldx @player_angle
     lda !cosines_lut,x
@@ -112,11 +106,6 @@ ClearRegisters:
 
     lda !sines_lut,x
     sta @player_dy
-
-    ; stz @player_fx_hi
-    ; stz @player_fx_lo
-    ; stz @player_fy_hi
-    ; stz @player_fy_lo
     .call M8
 
     stz @frame_counter
@@ -128,11 +117,6 @@ ClearRegisters:
 
 InitialSettings:
     php
-
-    ; .call RESERVE_STACK_FRAME 04
-    ; 01/02 -> buffer_x
-    ; 03/04 -> buffer_y
-
     .call M16
 
     ; player X
@@ -183,9 +167,6 @@ InitialSettings:
     sta @camera_y
     sbc @screen_y
     sta @bx
-
-
-    ; .call RESTORE_STACK_FRAME 04
 
     plp
     rts

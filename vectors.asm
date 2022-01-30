@@ -55,15 +55,6 @@ FastReset:
     jsr @InitOamBuffer
 
 ;  ---- Init tile map
-
-    ; ldy #0024 ; src X
-    ; sty @ax
-    ; ldy #0016 ; src Y
-    ; sty @bx
-    ; ldy #0000 ; dst X
-    ; sty @cx
-    ; ldy #0000 ; dst Y
-    ; sty @dx
     jsr @InitialSettings
     .call M16
     lda @ax
@@ -74,12 +65,10 @@ FastReset:
     .call LSR4
     sta @bx
 
-
     stz @cx
     stz @dx
     .call M8
     jsr @InitTileMap
-    ; jsr @CopyRow
 
     brk 00
     lda @screen_x
@@ -108,6 +97,15 @@ FastReset:
     .call CGRAM_DMA_TRANSFER 80, sprites_pal, SPRITES_PALETTE_SIZE  ; CGRAM[0x100] (word step)
 
     jsr @TransferOamBuffer
+
+    ; TEST
+    ldy #0000 ; src X
+    sty @ax
+    ldy #0003 ; src Y
+    sty @bx
+    ldy #0010 ; dst X
+    sty @cx
+    jsr @CopyNextRow
 
 ; ---- Release Forced Blank
     lda #0f             ; release forced blanking, set screen to full brightness
@@ -154,6 +152,11 @@ FastNmi:
     sta BG1VOFS
     lda @screen_y+1
     sta BG1VOFS
+
+    ; TEST
+    lda #00
+    sta VMAINC
+    .call VRAM_DMA_TRANSFER_TEST 0100, next_row, 0100, 18
 
     jsr @TransferOamBuffer
     jsr @ReadJoyPad1
