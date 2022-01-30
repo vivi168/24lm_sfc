@@ -132,7 +132,7 @@ copy_column_loop:
 ; copy next row in next_row
 ; ax -> src_x
 ; bx -> src_y
-; cx -> dst_x
+; cx -> dst_x (offset)
 CopyNextRow:
     .call RESERVE_STACK_FRAME 08
     ; 01/02    -> src_i
@@ -237,6 +237,112 @@ skip_row_wrap2:
     lda 05
     cmp #40 ; 64 x2 tiles rows
     bne @copy_row_loop
+
+    .call RESTORE_STACK_FRAME 08
+    rts
+
+
+; copy next col in next_col
+; ax -> src_x
+; bx -> src_y
+; cx -> dst_y (offset)
+CopyNextCol:
+    .call RESERVE_STACK_FRAME 08
+    ; 01/02    -> src_i
+    ; 03/04    -> dst_i
+    ; 05       -> loop counter
+    ; 06/07/08 -> bg_buffer addr
+
+    ldx #@next_col
+    stx 06
+    lda #^next_col
+    sta 08
+
+    .call M16
+    lda @bx
+    .call ASL3
+    .call ASL5 ; bx *= 256 (MAP_W)
+    clc
+    adc @ax
+    sta 01
+
+    lda @cx
+    sta 03
+    .call M8
+
+    ; loop counter
+    stz 05
+copy_next_col_loop:
+
+    ; uint8_t mi = circuit[src_i];
+    ldx 01
+    lda !circuit,x
+    .call M16
+    and #00ff
+    ; mi *= 4
+    asl
+    asl
+    tax
+    .call M8
+
+    ; next_col[dst_i]         = metatiles[mi * 4]               0
+    lda !metatiles,x
+    ldy 03
+    sta [06],y
+
+    ; next_col[dst_i+1]       = metatiles[mi * 4 + 1]           dst_i + BUF_W
+    iny
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+    ; next_col[dst_i+BUF_W]   = metatiles[mi * 4 + 2]            dst_i + 1
+    .call M16
+    lda 03
+    clc
+    adc #0080 ; += BUF_W
+    tay
+    .call M8
+
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+    ; next_col[dst_i+BUF_W+1] = metatiles[mi * 4 + 3]              3 -> 3
+    iny
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+
+    ; // next src idx
+    ; src_i += MAP_W
+    .call M16
+    lda 01
+    clc
+    adc #0100 ; MAP_W
+    sta 01
+
+    ; // next dst idx
+    ; dst_i += 2
+    inc 03
+    inc 03
+    ; if dst_i > 0 and dst_i % BUF_W == 0: dst_i -= BUF_W
+    lda 03
+    beq @skip_col_wrap
+    bit #007f
+    bne @skip_col_wrap
+    sec
+    sbc #0080
+    sta 03
+
+skip_col_wrap:
+    .call M8
+
+    inc 05
+    lda 05
+    cmp #40 ; 64 x2 tiles cols
+    bne @copy_next_col_loop
 
     .call RESTORE_STACK_FRAME 08
     rts
