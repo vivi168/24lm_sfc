@@ -246,6 +246,7 @@ skip_row_wrap2:
 ; ax -> src_x
 ; bx -> src_y
 ; cx -> dst_y (offset)
+; dx -> scratch
 CopyNextCol:
     .call RESERVE_STACK_FRAME 08
     ; 01/02    -> src_i
@@ -287,29 +288,31 @@ copy_next_col_loop:
 
     ; next_col[dst_i]         = metatiles[mi * 4]               0
     lda !metatiles,x
-    ldy 03
+    ldy 03 ; dst_i
     sta [06],y
 
     ; next_col[dst_i+1]       = metatiles[mi * 4 + 1]           dst_i + BUF_W
-    iny
-    inx
-    lda !metatiles,x
-    sta [06],y
-
-    ; next_col[dst_i+BUF_W]   = metatiles[mi * 4 + 2]            dst_i + 1
     .call M16
     lda 03
     clc
     adc #0080 ; += BUF_W
     tay
+    sta @dx
+    inc @dx
     .call M8
+    inx
+    lda !metatiles,x
+    sta [06],y
 
+    ; next_col[dst_i+BUF_W]   = metatiles[mi * 4 + 2]            dst_i + 1
+    ldy 03
+    iny
     inx
     lda !metatiles,x
     sta [06],y
 
     ; next_col[dst_i+BUF_W+1] = metatiles[mi * 4 + 3]              3 -> 3
-    iny
+    ldy @dx
     inx
     lda !metatiles,x
     sta [06],y

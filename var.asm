@@ -81,7 +81,9 @@ outfile_idx:               .rb 2   ; index to current outfile byte
 .org 7e2000
 
 bg1_buffer:               .rb 4000
-next_col:                 .rb 100
+next_col:
+next_col1:                .rb 80
+next_col2:                .rb 80
 next_row:                 .rb 100
 oam_buffer:               .rb 200
 oam_buffer_hi:            .rb 20

@@ -103,7 +103,7 @@ FastReset:
     sty @ax
     ldy #0000 ; src Y
     sty @bx
-    ldy #0000 ; dst X
+    ldy #0040 ; dst X
     sty @cx
     jsr @CopyNextRow
 
@@ -111,7 +111,7 @@ FastReset:
     sty @ax
     ldy #0000 ; src Y
     sty @bx
-    ldy #0000 ; dst Y
+    ldy #0040 ; dst Y
     sty @cx
     jsr @CopyNextCol
 
@@ -165,9 +165,10 @@ FastNmi:
     lda #00
     sta VMAINC
     .call VRAM_DMA_TRANSFER_TEST 0000, next_row, 0100, 18
-    lda #00
+    lda #02
     sta VMAINC
-    .call VRAM_DMA_TRANSFER_TEST 0000, next_col, 0100, 18
+    .call VRAM_DMA_TRANSFER_TEST 0000, next_col1, 0080, 18
+    .call VRAM_DMA_TRANSFER_TEST 0001, next_col2, 0080, 18
 
     jsr @TransferOamBuffer
     jsr @ReadJoyPad1
