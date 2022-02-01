@@ -75,16 +75,28 @@ UpdatePlayer:
 
     cmp 01
     beq @skip_column_update
+    ; set src_x,y dst_y here
     bcc @going_left_cc
 ; going right
     ; brk ff
-    ; TODO copy column ahead
+    ; next_col_x = screen.x + 0x268 (SCREEN_W + 360)
+
+    ; copy next col
+    ; src_x = buffer.x = camera.x - SCREEN_OFFSET_X + 1008
+    ; src_y = buffer.y = camera.y - SCREEN_OFFSET_Y
+    ; dst_y = screen.y - SCREEN_OFFSET_Y
+
 
     bra @end_column_update
 going_left_cc:
 ; going left
     ; brk 00
-    ; TODO copy column behind
+    ; next_col_x = screen.x - 0x188 (392)
+
+    ; copy next col
+    ; src_x = buffer.x = camera.x - SCREEN_OFFSET_X - 16
+    ; src_y = buffer.y = camera.y - SCREEN_OFFSET_Y
+    ; dst_y = screen.y - SCREEN_OFFSET_Y
 
 
 ; ---- Check vertical offset

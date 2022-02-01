@@ -164,11 +164,16 @@ FastNmi:
     ; TEST
     lda #00
     sta VMAINC
-    .call VRAM_DMA_TRANSFER_TEST 0000, next_row, 0100, 18
+    ; src 0000 should be a register (next_row_y)
+    .call VRAM_DMA_TRANSFER_TEST2 next_row_y, next_row, 0100, 18
     lda #02
     sta VMAINC
-    .call VRAM_DMA_TRANSFER_TEST 0000, next_col1, 0080, 18
-    .call VRAM_DMA_TRANSFER_TEST 0001, next_col2, 0080, 18
+    ; src 0000/0001 should be a register (next_col_x, next_col_x+1)
+
+    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col1, 0080, 18
+    inc @next_col_x
+    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col2, 0080, 18
+    dec @next_col_x
 
     jsr @TransferOamBuffer
     jsr @ReadJoyPad1

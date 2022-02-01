@@ -13,7 +13,7 @@ init_tilemap_loop:
 
     .call M16
     inc @ax ; src_x ++
-    lda @cx ; dst_x += 2
+    lda @cx ; dst_x += 2 (copy 1 col of metatile = 2 col of 8x8 tiles)
     inc
     inc
     and #007f ; wrap dst_x at 0
