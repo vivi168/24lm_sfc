@@ -82,9 +82,9 @@ UpdatePlayer:
     ; next_col_x = screen.x + 0x268 (SCREEN_W + 360)
 
     ; copy next col
-    ; src_x = buffer.x = camera.x - SCREEN_OFFSET_X + 1008
-    ; src_y = buffer.y = camera.y - SCREEN_OFFSET_Y
-    ; dst_y = screen.y - SCREEN_OFFSET_Y
+    ; src_x = buffer.x + 1008 = (camera.x - SCREEN_OFFSET_X) + 1008 -> wrap 4096
+    ; src_y = buffer.y = camera.y - SCREEN_OFFSET_Y -> wrap 4096
+    ; dst_y = screen.y - SCREEN_OFFSET_Y -> wrap 1024
 
 
     bra @end_column_update
@@ -94,7 +94,7 @@ going_left_cc:
     ; next_col_x = screen.x - 0x188 (392)
 
     ; copy next col
-    ; src_x = buffer.x = camera.x - SCREEN_OFFSET_X - 16
+    ; src_x = buffer.x = camera.x - SCREEN_OFFSET_X
     ; src_y = buffer.y = camera.y - SCREEN_OFFSET_Y
     ; dst_y = screen.y - SCREEN_OFFSET_Y
 
