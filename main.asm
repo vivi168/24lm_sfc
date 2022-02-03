@@ -29,7 +29,6 @@ MainLoop:
     jsr @HandleInput
 
     jsr @UpdatePlayer
-    jsr @CenterCam
     jsr @UpdatePlayerOAM
 
     jmp @MainLoop
@@ -69,6 +68,10 @@ UpdatePlayer:
     jsr @Lsr32
     lda @ax
     sta @player_y
+
+
+    jsr @CenterCam
+
 
 ; ---- Check horizontal offset
     lda @player_x
@@ -155,6 +158,9 @@ skip_row_update:
     rts
 
 CenterCam:
+    php
+
+    .call M8
     .call RESERVE_STACK_FRAME 04
     ; 01/02 -> prev camera_x
     ; 03/04 -> prev camera_y
@@ -200,6 +206,7 @@ CenterCam:
     .call M8
     .call RESTORE_STACK_FRAME 04
 
+    plp
     rts
 
 .include info.asm
