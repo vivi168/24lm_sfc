@@ -134,6 +134,10 @@ copy_column_loop:
 ; bx -> src_y
 ; cx -> dst_x (offset)
 CopyNextRow:
+    php
+
+    .call M8
+
     .call RESERVE_STACK_FRAME 08
     ; 01/02    -> src_i
     ; 03/04    -> dst_i
@@ -239,6 +243,8 @@ skip_row_wrap2:
     bne @copy_row_loop
 
     .call RESTORE_STACK_FRAME 08
+
+    plp
     rts
 
 
@@ -248,6 +254,10 @@ skip_row_wrap2:
 ; cx -> dst_y (offset)
 ; dx -> scratch
 CopyNextCol:
+    php
+
+    .call M8
+
     .call RESERVE_STACK_FRAME 08
     ; 01/02    -> src_i
     ; 03/04    -> dst_i
@@ -348,4 +358,6 @@ skip_col_wrap:
     bne @copy_next_col_loop
 
     .call RESTORE_STACK_FRAME 08
+
+    plp
     rts
