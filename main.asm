@@ -113,8 +113,6 @@ UpdatePlayer:
     sta @ax
 
     lda 07
-    sec
-    sbc #0128
     and #0fff
     .call LSR4
     sta @bx
