@@ -80,20 +80,24 @@ UpdatePlayer:
 
     cmp 01
     beq @skip_column_update
-    ; set src_x,y dst_y here
+
+    bcc @going_left_cc
+; going right
+    brk ff
+
+
+    ; buffer.x = camera.x - SCREEN_OFFSET_X
     lda @camera_x
     sec
     sbc #0188
     sta 05
 
+    ; buffer.y = camera.y - SCREEN_OFFSET_Y
     lda @camera_y
     sec
     sbc #0128
     sta 07
 
-    bcc @going_left_cc
-; going right
-    ; brk ff
     ; next_col_x = screen.x + 0x268 (SCREEN_W + 360)
     lda @screen_x
     clc
@@ -146,13 +150,7 @@ going_left_cc:
 ; ---- Check vertical offset
 end_column_update:
 skip_column_update:
-    lda @screen_y
-    bit #000f
-    bne @skip_row_update
-
 skip_row_update:
-
-
     .call M8
     .call RESTORE_STACK_FRAME 08
     rts
