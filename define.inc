@@ -19,6 +19,8 @@
 .define BUTTON_A     0080
 .define BUTTON_LEFT  0200
 .define BUTTON_RIGHT 0100
+.define BUTTON_DOWN  0400
+.define BUTTON_UP    0800
 
 ; OAM
 .define OAML_SIZE   0200

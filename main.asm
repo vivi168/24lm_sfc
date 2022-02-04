@@ -26,7 +26,7 @@
 MainLoop:
     jsr @WaitNextVBlank
 
-    jsr @HandleInput
+    jsr @HandleInput2
 
     jsr @UpdatePlayer
     jsr @UpdatePlayerOAM
@@ -34,11 +34,13 @@ MainLoop:
     jmp @MainLoop
 
 UpdatePlayer:
-    .call RESERVE_STACK_FRAME 08
+    .call RESERVE_STACK_FRAME 0c
     ; 01/02 -> prev player_x
     ; 03/04 -> prev player_y
     ; 05/06 -> buffer.x
-    ; 06/07 -> buffer.y
+    ; 07/08 -> buffer.y
+    ; 09/0a -> src_x offset
+    ; 0b/0c -> src_y offset
 
     .call M16
 
@@ -72,20 +74,6 @@ UpdatePlayer:
 
     jsr @CenterCam
 
-
-; ---- Check horizontal offset
-    lda @player_x
-    bit #000f
-    bne @skip_column_update
-
-    cmp 01
-    beq @skip_column_update
-
-    bcc @going_left_cc
-; going right
-    brk ff
-
-
     ; buffer.x = camera.x - SCREEN_OFFSET_X
     lda @camera_x
     sec
@@ -98,6 +86,19 @@ UpdatePlayer:
     sbc #0128
     sta 07
 
+
+; ---- Check horizontal offset
+    lda @player_x
+    bit #000f
+    bne @skip_column_update
+
+    cmp 01
+    beq @skip_column_update
+
+    bcc @going_left_cc
+; going right
+    ; brk ff
+
     ; next_col_x = screen.x + 0x268 (SCREEN_W + 360)
     lda @screen_x
     clc
@@ -108,13 +109,17 @@ UpdatePlayer:
     lsr
     sta @next_col_x
 
+    ; here set v_src_x offset = 1008
+    lda #03f0
+    sta 09
+
     ; copy next col
     ; src_x = buffer.x + 1008 = (camera.x - SCREEN_OFFSET_X) + 1008 -> wrap 4096
     ; src_y = buffer.y = camera.y - SCREEN_OFFSET_Y -> wrap 4096
     ; dst_y = screen.y - SCREEN_OFFSET_Y -> wrap 1024
     lda 05
     clc
-    adc #03f0
+    adc 09
     and #0fff
     .call LSR4
     sta @ax
@@ -124,6 +129,7 @@ UpdatePlayer:
     .call LSR4
     sta @bx
 
+    ; TODO same as next row y ??
     lda @screen_y
     sec
     sbc #0128
@@ -146,13 +152,21 @@ going_left_cc:
     ; src_y = buffer.y = camera.y - SCREEN_OFFSET_Y
     ; dst_y = screen.y - SCREEN_OFFSET_Y
 
+    stz 0b
+
 
 ; ---- Check vertical offset
 end_column_update:
 skip_column_update:
+
+end_row_update:
 skip_row_update:
+
+
+
+
     .call M8
-    .call RESTORE_STACK_FRAME 08
+    .call RESTORE_STACK_FRAME 0c
     rts
 
 CenterCam:

@@ -124,3 +124,84 @@ exit_handle_input:
 
     plp
     rts
+
+HandleInput2:
+    php
+
+    .call M16
+
+    stz @dx
+
+    lda @joy1_held
+    bit #BUTTON_LEFT
+    bne @go_left
+
+    bit #BUTTON_RIGHT
+    bne @go_right
+
+    bit #BUTTON_UP
+    bne @go_up
+
+    bit #BUTTON_DOWN
+    bne @go_down
+
+    jmp @exit_handle_input2
+
+
+go_left:
+    ;
+    lda #fc00
+    jmp @add_velocity_x
+go_right:
+    ;
+    lda #0400
+    jmp @add_velocity_x
+go_up:
+    lda #fc00
+    jmp @add_velocity_y
+go_down:
+    lda #0400
+    jmp @add_velocity_y
+
+
+add_velocity_x:
+    brk 00
+    sta @cx
+
+    bpl @add_x_coord2
+    dec @dx ; wrap dx at 0xffff (negative)
+add_x_coord2:
+    lda @player_fx_lo
+    sta @ax
+    lda @player_fx_hi
+    sta @bx
+
+    jsr @Add32
+    lda @ax
+    sta @player_fx_lo
+    lda @bx
+    sta @player_fx_hi
+    bra @exit_handle_input2
+
+add_velocity_y:
+    sta @cx
+
+    bpl @add_y_coord2
+    stz @dx
+    dec @dx ; wrap dx at 0xffff (negative)
+add_y_coord2:
+    lda @player_fy_lo
+    sta @ax
+    lda @player_fy_hi
+    sta @bx
+
+    jsr @Add32
+    lda @ax
+    sta @player_fy_lo
+    lda @bx
+    sta @player_fy_hi
+
+exit_handle_input2:
+
+    plp
+    rts
