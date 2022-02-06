@@ -169,8 +169,21 @@ FastNmi:
     lda #00
     sta VMAINC
     ; src 0000 should be a register (next_row_y)
+
+    .call M16
+    ; next_row_y *= 128
+    lda @next_row_y
+    pha
+    .call ASL3
+    .call ASL4
+    sta @next_row_y
+    .call M8
+
     .call VRAM_DMA_TRANSFER_TEST2 next_row_y, next_row, 0100, 18
     stz @need_update_row
+
+    plx
+    stx @next_row_y
 
 check_transfer_next_col:
     lda @need_update_col

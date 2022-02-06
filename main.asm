@@ -111,9 +111,7 @@ going_right_cc:
     clc
     adc #0268 ; SCREEN_W + 360
     and #03ff
-    lsr
-    lsr
-    lsr
+    .call LSR3
     sta @next_col_x
 
     ; src_x_offset = 1008
@@ -130,9 +128,7 @@ going_left_cc:
     sec
     sbc #0188
     and #03ff
-    lsr
-    lsr
-    lsr
+    .call LSR3
     sta @next_col_x
 
     ; src_x_offset = 0;
@@ -162,11 +158,7 @@ going_down_cc:
     clc
     adc #02c8
     and #03ff
-    lsr
-    lsr
-    lsr
-    .call ASL3
-    .call ASL4
+    .call LSR3
     sta @next_row_y
 
     ; src_y_offset = 1008;
@@ -181,11 +173,7 @@ going_up_cc:
     sec
     sbc #128
     and #03ff
-    lsr
-    lsr
-    lsr
-    .call ASL3
-    .call ASL4
+    .call LSR3
     sta @next_row_y
 
     ; src_y_offset = 0;
@@ -220,11 +208,9 @@ copy_next_col:
     lda 07
     and #0fff
     .call LSR4
-    ; next_row_y
     sta @bx
+    ; next_row_y
     lda @next_row_y
-    .call LSR4
-    .call LSR3
     sta @cx
     jsr @CopyNextCol
     lda @need_update
@@ -251,6 +237,7 @@ copy_next_row:
     and #0fff
     .call LSR4
     sta @bx
+    ; next_col_x
     lda @next_col_x
     sta @cx
     jsr @CopyNextRow
