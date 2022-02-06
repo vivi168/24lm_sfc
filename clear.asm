@@ -119,6 +119,8 @@ InitialSettings:
     php
     .call M16
 
+    stz @need_update
+
     ; place player on start position (1104, 768)
     ; player X -> 1104
     lda #0450

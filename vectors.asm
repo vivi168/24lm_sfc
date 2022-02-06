@@ -70,7 +70,7 @@ FastReset:
     .call M8
     jsr @InitTileMap
 
-    brk 00
+    ; brk 00
     lda @screen_x
     sta BG1HOFS
     lda @screen_x+1
@@ -162,18 +162,31 @@ FastNmi:
     sta BG1VOFS
 
     ; TEST
+    lda @need_update_row
+    bit #01
+    beq @check_transfer_next_col
+
     lda #00
     sta VMAINC
     ; src 0000 should be a register (next_row_y)
     .call VRAM_DMA_TRANSFER_TEST2 next_row_y, next_row, 0100, 18
+    stz @need_update_row
+
+check_transfer_next_col:
+    lda @need_update_col
+    bit #01
+    beq @skip_transfer_next_col
+
     lda #02
     sta VMAINC
     ; src 0000/0001 should be a register (next_col_x, next_col_x+1)
-
     .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col1, 0080, 18
     inc @next_col_x
     .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col2, 0080, 18
     dec @next_col_x
+    stz @need_update_col
+
+skip_transfer_next_col:
 
     jsr @TransferOamBuffer
     jsr @ReadJoyPad1

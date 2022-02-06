@@ -46,6 +46,13 @@
     asl
 .endm
 
+; divide by 8
+.macro LSR3
+    lsr
+    lsr
+    lsr
+.endm
+
 ; divide by 16
 .macro LSR4
     lsr

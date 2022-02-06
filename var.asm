@@ -37,6 +37,9 @@ hex_to_dec_out:           .rb 3
 ; next col/row offset
 next_col_x:               .rb 2
 next_row_y:               .rb 2
+need_update:
+need_update_col:           .rb 1
+need_update_row:           .rb 1
 
 ; struct point player
 player_fx:

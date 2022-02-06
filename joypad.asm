@@ -165,7 +165,6 @@ go_down:
 
 
 add_velocity_x:
-    brk 00
     sta @cx
 
     bpl @add_x_coord2

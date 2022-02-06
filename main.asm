@@ -37,19 +37,23 @@ UpdatePlayer:
     .call RESERVE_STACK_FRAME 0c
     ; 01/02 -> prev player_x
     ; 03/04 -> prev player_y
-    ; 05/06 -> buffer.x
-    ; 07/08 -> buffer.y
-    ; 09/0a -> src_x offset
-    ; 0b/0c -> src_y offset
+    ; 05/06 -> buffer.x / -> @ax ?
+    ; 07/08 -> buffer.y / -> @bx ?
+    ; 09/0a -> src_x_offset
+    ; 0b/0c -> src_y_offset
+    ; @dx   -> need_update
 
     .call M16
 
+    ; player_prev_x = player.x;
     lda @player_x
     sta 01
+    ; player_prev_y = player.y;
     lda @player_y
     sta 03
 
     ; X coord
+    ; player.x = player.fx >> 10;
     lda @player_fx_lo
     sta @ax
     lda @player_fx_hi
@@ -61,6 +65,7 @@ UpdatePlayer:
     sta @player_x
 
     ; Y coord
+    ; player.y = player.fy >> 10;
     lda @player_fy_lo
     sta @ax
     lda @player_fy_hi
@@ -74,18 +79,20 @@ UpdatePlayer:
 
     jsr @CenterCam
 
-    ; buffer.x = camera.x - SCREEN_OFFSET_X
+    ; buffer.x = camera.x - SCREEN_OFFSET_X;
     lda @camera_x
     sec
     sbc #0188
     sta 05
 
-    ; buffer.y = camera.y - SCREEN_OFFSET_Y
+    ; buffer.y = camera.y - SCREEN_OFFSET_Y;
     lda @camera_y
     sec
     sbc #0128
     sta 07
 
+    ; need_update = 0;
+    stz @dx
 
 ; ---- Check horizontal offset
     lda @player_x
@@ -96,75 +103,162 @@ UpdatePlayer:
     beq @skip_column_update
 
     bcc @going_left_cc
-; going right
+going_right_cc:
     ; brk ff
 
-    ; next_col_x = screen.x + 0x268 (SCREEN_W + 360)
+    ; next_col_x = ((screen.x + SCREEN_W + 360) % 1024) // 16;
     lda @screen_x
     clc
-    adc #0268
+    adc #0268 ; SCREEN_W + 360
     and #03ff
     lsr
     lsr
     lsr
     sta @next_col_x
 
-    ; here set v_src_x offset = 1008
+    ; src_x_offset = 1008
     lda #03f0
     sta 09
-
-    ; copy next col
-    ; src_x = buffer.x + 1008 = (camera.x - SCREEN_OFFSET_X) + 1008 -> wrap 4096
-    ; src_y = buffer.y = camera.y - SCREEN_OFFSET_Y -> wrap 4096
-    ; dst_y = screen.y - SCREEN_OFFSET_Y -> wrap 1024
-    lda 05
-    clc
-    adc 09
-    and #0fff
-    .call LSR4
-    sta @ax
-
-    lda 07
-    and #0fff
-    .call LSR4
-    sta @bx
-
-    ; TODO same as next row y ??
-    lda @screen_y
-    sec
-    sbc #0128
-    and #03ff
-    lsr
-    lsr
-    lsr
-    sta @cx
-
-    jsr @CopyNextCol
 
     bra @end_column_update
 going_left_cc:
 ; going left
     ; brk 00
-    ; next_col_x = screen.x - 0x188 (392)
 
-    ; copy next col
-    ; src_x = buffer.x = camera.x - SCREEN_OFFSET_X
-    ; src_y = buffer.y = camera.y - SCREEN_OFFSET_Y
-    ; dst_y = screen.y - SCREEN_OFFSET_Y
+    ; next_col_x = ((screen.x - 392) % 1024) // 16;
+    lda @screen_x
+    sec
+    sbc #0188
+    and #03ff
+    lsr
+    lsr
+    lsr
+    sta @next_col_x
 
+    ; src_x_offset = 0;
+    stz 09
+
+
+end_column_update:
+    ; need_update |= 0x0001;
+    lda @dx
+    ora #0001
+    sta @dx ; maybe we could just inc @dx as it was stz before
+
+skip_column_update:
+; ---- Check vertical offset
+    lda @player_y
+    bit #000f
+    bne @skip_row_update
+
+    cmp 03
+    beq @skip_row_update
+
+    bcc @going_up_cc
+going_down_cc:
+
+    ; next_row_y = screen.y + (SCREEN_H + 488);
+    lda @screen_y
+    clc
+    adc #02c8
+    and #03ff
+    lsr
+    lsr
+    lsr
+    .call ASL3
+    .call ASL4
+    sta @next_row_y
+
+    ; src_y_offset = 1008;
+    lda #03f0
+    sta 0b
+
+    bra @end_row_update
+going_up_cc:
+
+    ; next_row_y = screen.y - 296;
+    lda @screen_y
+    sec
+    sbc #128
+    and #03ff
+    lsr
+    lsr
+    lsr
+    .call ASL3
+    .call ASL4
+    sta @next_row_y
+
+    ; src_y_offset = 0;
     stz 0b
 
-
-; ---- Check vertical offset
-end_column_update:
-skip_column_update:
-
 end_row_update:
+    ; need_update |= 0x0100;
+    lda @dx
+    ora #0100
+    sta @dx
+
 skip_row_update:
 
+    lda @dx
+    pha
+    bit #0001
+    bne @copy_next_col
+    bra @check_copy_next_row
+copy_next_col:
+    brk 00
+    ; CopyNextCol(buffer_x + src_x_offset,
+    ;             buffer_y,
+    ;             next_row_y);
+    ; buffer_x + src_x_offset,
+    lda 05
+    clc
+    adc 09
+    and #0fff
+    .call LSR4
+    ; buffer.y
+    sta @ax
+    lda 07
+    and #0fff
+    .call LSR4
+    ; next_row_y
+    sta @bx
+    lda @next_row_y
+    .call LSR4
+    .call LSR3
+    sta @cx
+    jsr @CopyNextCol
+    lda @need_update
+    ora #0001
+    sta @need_update
 
+check_copy_next_row:
+    pla ; @dx
+    bit #0100
+    bne @copy_next_row
+    bra @exit_update_player
+copy_next_row:
+    brk 01
+    ; CopyNextRow(buffer_x,
+    ;             buffer_y + src_y_offset,
+    ;             next_col_x);
+    lda 05
+    and #0fff
+    .call LSR4
+    sta @ax
+    lda 07
+    clc
+    adc 0b
+    and #0fff
+    .call LSR4
+    sta @bx
+    lda @next_col_x
+    sta @cx
+    jsr @CopyNextRow
+    lda @need_update
+    ora #0100
+    sta @need_update
 
-
+exit_update_player:
     .call M8
     .call RESTORE_STACK_FRAME 0c
     rts
