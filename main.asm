@@ -104,8 +104,6 @@ UpdatePlayer:
 
     bcc @going_left_cc
 going_right_cc:
-    ; brk ff
-
     ; next_col_x = ((screen.x + SCREEN_W + 360) % 1024) // 16;
     lda @screen_x
     clc
@@ -120,9 +118,6 @@ going_right_cc:
 
     bra @end_column_update
 going_left_cc:
-; going left
-    ; brk 00
-
     ; next_col_x = ((screen.x - 392) % 1024) // 16;
     lda @screen_x
     sec
@@ -152,7 +147,6 @@ skip_column_update:
 
     bcc @going_up_cc
 going_down_cc:
-
     ; next_row_y = screen.y + (SCREEN_H + 488);
     lda @screen_y
     clc
@@ -167,7 +161,6 @@ going_down_cc:
 
     bra @end_row_update
 going_up_cc:
-
     ; next_row_y = screen.y - 296;
     lda @screen_y
     sec
@@ -193,7 +186,6 @@ skip_row_update:
     bne @copy_next_col
     bra @check_copy_next_row
 copy_next_col:
-    brk 00
     ; CopyNextCol(buffer_x + src_x_offset,
     ;             buffer_y,
     ;             next_row_y);
@@ -203,8 +195,8 @@ copy_next_col:
     adc 09
     and #0fff
     .call LSR4
-    ; buffer.y
     sta @ax
+    ; buffer.y
     lda 07
     and #0fff
     .call LSR4
@@ -212,6 +204,7 @@ copy_next_col:
     ; next_row_y
     lda @next_row_y
     sta @cx
+    brk 00
     jsr @CopyNextCol
     lda @need_update
     ora #0001
@@ -223,14 +216,15 @@ check_copy_next_row:
     bne @copy_next_row
     bra @exit_update_player
 copy_next_row:
-    brk 01
     ; CopyNextRow(buffer_x,
     ;             buffer_y + src_y_offset,
     ;             next_col_x);
+    ; buffer_x
     lda 05
     and #0fff
     .call LSR4
     sta @ax
+    ; buffer_y + src_y_offset
     lda 07
     clc
     adc 0b
@@ -240,6 +234,7 @@ copy_next_row:
     ; next_col_x
     lda @next_col_x
     sta @cx
+    brk 01
     jsr @CopyNextRow
     lda @need_update
     ora #0100

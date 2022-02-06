@@ -70,7 +70,6 @@ FastReset:
     .call M8
     jsr @InitTileMap
 
-    ; brk 00
     lda @screen_x
     sta BG1HOFS
     lda @screen_x+1
