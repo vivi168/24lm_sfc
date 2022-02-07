@@ -41,8 +41,6 @@ UpdatePlayer:
     ; 07/08 -> buffer.y / -> @bx ?
     ; 09/0a -> src_x_offset
     ; 0b/0c -> src_y_offset
-    ; @dx   -> need_update
-
     .call M16
 
     ; player_prev_x = player.x;
@@ -90,9 +88,6 @@ UpdatePlayer:
     sec
     sbc #0128
     sta 07
-
-    ; need_update = 0;
-    stz @dx
 
 ; ---- Check horizontal offset
     lda @player_x
@@ -145,13 +140,13 @@ end_column_update:
     lda 07
     and #0fff
     .call LSR4
-    sta @bx
+    sta @bx        ; TODO round??
     ; next_row_y
-    lda @next_row_y  ; TODO NEED TO FIND HOW TO UPDATE THIS !!!
-    ; sec
-    ; sbc #0128
-    ; and #03ff
-    ; .call LSR3
+    lda @screen_y  ; TODO round??
+    sec
+    sbc #0128
+    and #03ff
+    .call LSR3
     sta @cx
     brk 00
     jsr @CopyNextCol
@@ -203,7 +198,7 @@ end_row_update:
     lda 05
     and #0fff
     .call LSR4
-    sta @ax
+    sta @ax       ; TODO round??
     ; buffer_y + src_y_offset
     lda 07
     clc
@@ -212,11 +207,11 @@ end_row_update:
     .call LSR4
     sta @bx
     ; next_col_x
-    lda @next_col_x ; TODO NEED TO FIND HOW TO UPDATE THIS !!!
-    ; sec
-    ; sbc #0188
-    ; and #03ff
-    ; .call LSR3
+    lda @screen_x ; TODO round??
+    sec
+    sbc #0188
+    and #03ff
+    .call LSR3
     sta @cx
     brk 01
     jsr @CopyNextRow
