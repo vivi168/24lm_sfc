@@ -131,10 +131,33 @@ going_left_cc:
 
 
 end_column_update:
-    ; need_update |= 0x0001;
-    lda @dx
+    ; CopyNextCol(buffer_x + src_x_offset,
+    ;             buffer_y,
+    ;             next_row_y);
+    ; buffer_x + src_x_offset,
+    lda 05
+    clc
+    adc 09
+    and #0fff
+    .call LSR4
+    sta @ax
+    ; buffer.y
+    lda 07
+    and #0fff
+    .call LSR4
+    sta @bx
+    ; next_row_y
+    lda @next_row_y  ; TODO NEED TO FIND HOW TO UPDATE THIS !!!
+    ; sec
+    ; sbc #0128
+    ; and #03ff
+    ; .call LSR3
+    sta @cx
+    brk 00
+    jsr @CopyNextCol
+    lda @need_update
     ora #0001
-    sta @dx ; maybe we could just inc @dx as it was stz before
+    sta @need_update
 
 skip_column_update:
 ; ---- Check vertical offset
@@ -173,49 +196,6 @@ going_up_cc:
     stz 0b
 
 end_row_update:
-    ; need_update |= 0x0100;
-    lda @dx
-    ora #0100
-    sta @dx
-
-skip_row_update:
-
-    lda @dx
-    pha
-    bit #0001
-    bne @copy_next_col
-    bra @check_copy_next_row
-copy_next_col:
-    ; CopyNextCol(buffer_x + src_x_offset,
-    ;             buffer_y,
-    ;             next_row_y);
-    ; buffer_x + src_x_offset,
-    lda 05
-    clc
-    adc 09
-    and #0fff
-    .call LSR4
-    sta @ax
-    ; buffer.y
-    lda 07
-    and #0fff
-    .call LSR4
-    sta @bx
-    ; next_row_y
-    lda @next_row_y
-    sta @cx
-    brk 00
-    jsr @CopyNextCol
-    lda @need_update
-    ora #0001
-    sta @need_update
-
-check_copy_next_row:
-    pla ; @dx
-    bit #0100
-    bne @copy_next_row
-    bra @exit_update_player
-copy_next_row:
     ; CopyNextRow(buffer_x,
     ;             buffer_y + src_y_offset,
     ;             next_col_x);
@@ -232,7 +212,11 @@ copy_next_row:
     .call LSR4
     sta @bx
     ; next_col_x
-    lda @next_col_x
+    lda @next_col_x ; TODO NEED TO FIND HOW TO UPDATE THIS !!!
+    ; sec
+    ; sbc #0188
+    ; and #03ff
+    ; .call LSR3
     sta @cx
     brk 01
     jsr @CopyNextRow
@@ -240,7 +224,8 @@ copy_next_row:
     ora #0100
     sta @need_update
 
-exit_update_player:
+skip_row_update:
+
     .call M8
     .call RESTORE_STACK_FRAME 0c
     rts
