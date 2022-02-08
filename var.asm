@@ -41,6 +41,11 @@ need_update:
 need_update_col:           .rb 1
 need_update_row:           .rb 1
 
+next_src_x: .rb 2
+next_src_y: .rb 2
+next_dst_x: .rb 2
+next_dst_y: .rb 2
+
 ; struct point player
 player_fx:
 player_fx_lo:             .rb 2 ; fixed point value (1 = 64), 32 bits

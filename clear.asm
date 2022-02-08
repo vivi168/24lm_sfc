@@ -155,6 +155,9 @@ InitialSettings:
     lda #0128 ; 296, constant
     sta @screen_y
 
+    stz @next_dst_x
+    stz @next_dst_y
+
     ; camera X = player_x - SCREEN_W / 2
     lda @player_x
     sec
@@ -163,6 +166,9 @@ InitialSettings:
     sbc @screen_x
     ; buffer.x = camera.x - SCREEN_OFFSET_X (screen.x = SCREEN_OFFSET_X at reset)
     sta @ax
+    and #0fff
+    .call LSR4
+    sta @next_src_x
 
     ; camera Y = player_y - SCREEN_H / 2
     lda @player_y
@@ -172,6 +178,9 @@ InitialSettings:
     sbc @screen_y
     ; buffer.y = camera.y - SCREEN_OFFSET_Y (screen.y = SCREEN_OFFSET_Y at reset)
     sta @bx
+    and #0fff
+    .call LSR4
+    sta @next_src_y
 
     plp
     rts

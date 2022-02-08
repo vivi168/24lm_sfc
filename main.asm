@@ -106,6 +106,10 @@ going_right_cc:
     and #03ff
     .call LSR3
     sta @next_col_x
+    inc
+    inc
+    and #007f
+    sta @next_dst_x
 
     ; src_x_offset = 1008
     lda #03f0
@@ -120,6 +124,7 @@ going_left_cc:
     and #03ff
     .call LSR3
     sta @next_col_x
+    sta @next_dst_x
 
     ; src_x_offset = 0;
     stz 09
@@ -131,22 +136,20 @@ end_column_update:
     ;             next_row_y);
     ; buffer_x + src_x_offset,
     lda 05
+    and #0fff
+    .call LSR4
+    sta @next_src_x
+    lda 05
     clc
     adc 09
     and #0fff
     .call LSR4
     sta @ax
     ; buffer.y
-    lda 07
-    and #0fff
-    .call LSR4
-    sta @bx        ; TODO round??
+    lda @next_src_y
+    sta @bx
     ; next_row_y
-    lda @screen_y  ; TODO round??
-    sec
-    sbc #0128
-    and #03ff
-    .call LSR3
+    lda @next_dst_y
     sta @cx
     brk 00
     jsr @CopyNextCol
@@ -172,6 +175,10 @@ going_down_cc:
     and #03ff
     .call LSR3
     sta @next_row_y
+    inc
+    inc
+    and #007f
+    sta @next_dst_y
 
     ; src_y_offset = 1008;
     lda #03f0
@@ -186,6 +193,7 @@ going_up_cc:
     and #03ff
     .call LSR3
     sta @next_row_y
+    sta @next_dst_y
 
     ; src_y_offset = 0;
     stz 0b
@@ -195,11 +203,13 @@ end_row_update:
     ;             buffer_y + src_y_offset,
     ;             next_col_x);
     ; buffer_x
-    lda 05
+    lda @next_src_x
+    sta @ax
+    ; buffer_y + src_y_offset
+    lda 07
     and #0fff
     .call LSR4
-    sta @ax       ; TODO round??
-    ; buffer_y + src_y_offset
+    sta @next_src_y
     lda 07
     clc
     adc 0b
@@ -207,11 +217,7 @@ end_row_update:
     .call LSR4
     sta @bx
     ; next_col_x
-    lda @screen_x ; TODO round??
-    sec
-    sbc #0188
-    and #03ff
-    .call LSR3
+    lda @next_dst_x
     sta @cx
     brk 01
     jsr @CopyNextRow
