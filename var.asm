@@ -68,6 +68,14 @@ player_sy:                .rb 2 ; position on screen
 camera_x:                 .rb 2
 camera_y:                 .rb 2
 
+; mode 7
+m7_a: .rb 2
+m7_b: .rb 2
+m7_c: .rb 2
+m7_d: .rb 2
+m7_x: .rb 2
+m7_y: .rb 2
+
 ; ---- for decompression
 r:                      .rb 2
 i:                      .rb 2

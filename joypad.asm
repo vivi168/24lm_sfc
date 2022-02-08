@@ -204,3 +204,52 @@ exit_handle_input2:
 
     plp
     rts
+
+
+
+; Assist mode 7 debug
+; left / right -> decrease / increase B, C parameters
+; down / up -> decrease / increase A, D parameters
+HandleInput3:
+    php
+
+    .call M16
+
+    stz @dx
+
+    lda @joy1_held
+    bit #BUTTON_LEFT
+    bne @decrease_bc
+
+    bit #BUTTON_RIGHT
+    bne @increase_bc
+
+    bit #BUTTON_UP
+    bne @increase_ad
+
+    bit #BUTTON_DOWN
+    bne @decrease_ad
+
+    jmp @exit_handle_input3
+
+
+decrease_bc:
+    inc @m7_b
+    dec @m7_c
+    jmp @exit_handle_input3
+increase_bc:
+    dec @m7_b
+    inc @m7_c
+    jmp @exit_handle_input3
+increase_ad:
+    inc @m7_a
+    inc @m7_d
+    jmp @exit_handle_input3
+decrease_ad:
+    dec @m7_a
+    dec @m7_d
+
+exit_handle_input3:
+
+    plp
+    rts

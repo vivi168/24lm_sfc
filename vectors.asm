@@ -32,25 +32,6 @@ FastReset:
 
 ;  ---- Some initialization
 
-; Writing a <new> byte to one of the write-twice M7'registers does:
-; M7_reg = new * 100h + M7_old
-; M7_old = new
-
-    ; lda #00
-    ; sta M7A
-    ; lda #02
-    ; sta M7A
-
-    ; lda #80
-    ; sta M7C
-    ; lda #00
-    ; sta M7C
-
-    ; lda #00
-    ; sta M7D
-    ; lda #01
-    ; sta M7D
-
     jsr @InitLzssDecode
     jsr @InitOamBuffer
 
@@ -78,6 +59,37 @@ FastReset:
     sta BG1VOFS
     lda @screen_y+1
     sta BG1VOFS
+
+    ; MODE 7 CENTER/MATRIX PARAMS
+    lda @m7_x
+    sta M7X
+    lda @m7_x+1
+    sta M7X
+    lda @m7_y
+    sta M7Y
+    lda @m7_y+1
+    sta M7Y
+
+    lda @m7_a
+    sta M7A
+    lda @m7_a+1
+    sta M7A
+
+    lda @m7_b
+    sta M7B
+    lda @m7_b+1
+    sta M7B
+
+    lda @m7_c
+    sta M7C
+    lda @m7_c+1
+    sta M7C
+
+    lda @m7_d
+    sta M7D
+    lda @m7_d+1
+    sta M7D
+
 
 ;  ---- DMA Transfers
 
@@ -159,6 +171,38 @@ FastNmi:
     sta BG1VOFS
     lda @screen_y+1
     sta BG1VOFS
+
+    ; MODE 7 CENTER/MATRIX PARAMS
+    lda @m7_x
+    sta M7X
+    lda @m7_x+1
+    sta M7X
+    lda @m7_y
+    sta M7Y
+    lda @m7_y+1
+    sta M7Y
+
+    lda @m7_a
+    sta M7A
+    lda @m7_a+1
+    sta M7A
+
+    lda @m7_b
+    sta M7B
+    lda @m7_b+1
+    sta M7B
+
+    lda @m7_c
+    sta M7C
+    lda @m7_c+1
+    sta M7C
+
+    lda @m7_d
+    sta M7D
+    lda @m7_d+1
+    sta M7D
+
+
 
     ; TEST
     lda @need_update_row
