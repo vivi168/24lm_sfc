@@ -26,7 +26,7 @@
 MainLoop:
     jsr @WaitNextVBlank
 
-    jsr @HandleInput2
+    jsr @HandleInput
 
     jsr @UpdatePlayer
     jsr @UpdatePlayerOAM
