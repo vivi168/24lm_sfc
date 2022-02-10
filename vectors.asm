@@ -70,27 +70,6 @@ FastReset:
     lda @m7_y+1
     sta M7Y
 
-    lda @m7_a
-    sta M7A
-    lda @m7_a+1
-    sta M7A
-
-    lda @m7_b
-    sta M7B
-    lda @m7_b+1
-    sta M7B
-
-    lda @m7_c
-    sta M7C
-    lda @m7_c+1
-    sta M7C
-
-    lda @m7_d
-    sta M7D
-    lda @m7_d+1
-    sta M7D
-
-
 ;  ---- DMA Transfers
 
     ; transfer tilemap (write low byte of VRAM, then inc)
@@ -161,6 +140,9 @@ FastNmi:
 
     lda RDNMI
 
+    stz MDMAEN
+    stz HDMAEN
+
     inc @frame_counter
 
     lda @screen_x
@@ -181,28 +163,6 @@ FastNmi:
     sta M7Y
     lda @m7_y+1
     sta M7Y
-
-    lda @m7_a
-    sta M7A
-    lda @m7_a+1
-    sta M7A
-
-    lda @m7_b
-    sta M7B
-    lda @m7_b+1
-    sta M7B
-
-    lda @m7_c
-    sta M7C
-    lda @m7_c+1
-    sta M7C
-
-    lda @m7_d
-    sta M7D
-    lda @m7_d+1
-    sta M7D
-
-
 
     ; TEST
     lda @need_update_row
@@ -245,6 +205,9 @@ check_transfer_next_col:
 skip_transfer_next_col:
 
     jsr @TransferOamBuffer
+
+    jsr @HdmaTest
+
     jsr @ReadJoyPad1
 
     inc @vblank_disable
@@ -255,3 +218,62 @@ skip_transfer_next_col:
     pla
     plp
     rti
+
+
+HdmaTest:
+    php
+
+    ; m7_a via channel 3
+    lda #^m7_a_hdma_table
+    sta A1T3B
+    ldx #@m7_a_hdma_table
+    stx A1T3L
+
+    lda #1B ; via port 21*1B* (M7A)
+    sta BBAD3
+
+    lda #02 ; mode 2, transfer 2 bytes
+    sta DMAP3
+
+    ; m7_b via channel 4
+    lda #^m7_b_hdma_table
+    sta A1T4B
+    ldx #@m7_b_hdma_table
+    stx A1T4L
+
+    lda #1C ; via port 21*1C* (M7B)
+    sta BBAD4
+
+    lda #02
+    sta DMAP4
+
+    ; m7_b via channel 5
+    lda #^m7_c_hdma_table
+    sta A1T5B
+    ldx #@m7_c_hdma_table
+    stx A1T5L
+
+    lda #1D ; via port 21*1D* (M7C)
+    sta BBAD5
+
+    lda #02
+    sta DMAP5
+
+    ; m7_b via channel 6
+    lda #^m7_d_hdma_table
+    sta A1T6B
+    ldx #@m7_d_hdma_table
+    stx A1T6L
+
+    lda #1E ; via port 21*1E* (M7D)
+    sta BBAD6
+
+    lda #02
+    sta DMAP6
+
+    ; start transfers via channels 3,4,5,6 (0111 1000)
+    lda #78
+    sta HDMAEN
+
+    plp
+    rts
