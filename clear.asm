@@ -100,11 +100,12 @@ ClearRegisters:
     stz @next_row_y
 
     stz @player_angle
-    ldx @player_angle
-    lda !cosines_lut,x
+    lda @player_angle
+    jsr @GetCos
     sta @player_dx
 
-    lda !sines_lut,x
+    lda @player_angle
+    jsr @GetSin
     sta @player_dy
 
     lda #0100
