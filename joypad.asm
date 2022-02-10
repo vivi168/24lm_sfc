@@ -96,14 +96,12 @@ add_y_coord:
 turn_left:
     lda @player_angle
     dec
-    dec
     and #00ff
     sta @player_angle
     bra @exit_handle_input
 
 turn_right:
     lda @player_angle
-    inc
     inc
     and #00ff
     sta @player_angle

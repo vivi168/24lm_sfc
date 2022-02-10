@@ -31,7 +31,7 @@ MainLoop:
     jsr @UpdatePlayer
     jsr @UpdatePlayerOAM
 
-    ; jsr @UpdateM7Params
+    jsr @UpdateM7Params
 
     jmp @MainLoop
 
@@ -288,69 +288,33 @@ CenterCam:
 UpdateM7Params:
     php
 
+    .call RESERVE_STACK_FRAME 02
+    ; 01/02 -> matrix angle
+
     .call M16
 
-    brk 00
     ; matrix_angle = - player_angle - 90
     lda @player_angle
-
     eor #ffff
     inc
-    clc
-    adc #0168
 
     sec
-    sbc #005a
-    ; if angle < 0: angle += 360
-    bpl @skip_wrap_angle
-    clc
-    adc #0168
-
-skip_wrap_angle:
-    asl
-    tax
+    sbc #0040
+    and #00ff
+    sta 01
 
     ; A =  cos(matrix_angle) * SCALE
-    lda !cosines_lut,x
-    beq @store_m7_a
-    bpl @skip_cos_neg_lsr
-
-    eor #ffff
-    inc
-    lsr
-    lsr
-    eor #ffff
-    inc
-    bra @store_m7_a
-
-skip_cos_neg_lsr:
-    lsr
-    lsr
-store_m7_a:
+    jsr @GetCos
+    jsr @Asr2
     sta @m7_a
-
     ; D =  cos(matrix_angle) * SCALE
     sta @m7_d
 
+    lda 01
     ; B =  sin(matrix_angle) * SCALE
-    lda !sines_lut,x
-    beq @store_m7_b
-    bpl @skip_sin_neg_lsr
-
-    eor #ffff
-    inc
-    lsr
-    lsr
-    eor #ffff
-    inc
-    bra @store_m7_b
-
-skip_sin_neg_lsr:
-    lsr
-    lsr
-store_m7_b:
+    jsr @GetSin
+    jsr @Asr2
     sta @m7_b
-
     ; C = -sin(matrix_angle) * SCALE
     eor #ffff
     inc
@@ -368,6 +332,8 @@ store_m7_b:
     adc #0070
     sta @m7_y
 
+    .call M8
+    .call RESTORE_STACK_FRAME 02
 
     plp
     rts

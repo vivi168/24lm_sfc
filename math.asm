@@ -102,3 +102,27 @@ GetCos:
     jsr @GetSin
 
     rts
+
+; arithmetic shift right
+; value in A
+; result in A
+Asr2:
+    brk 00
+    beq @exit_asr
+    bpl @skip_neg_asr
+
+    eor #ffff
+    inc
+
+    lsr
+    lsr
+
+    eor #ffff
+    inc
+    bra @exit_asr
+
+skip_neg_asr:
+    lsr
+    lsr
+exit_asr:
+    rts
