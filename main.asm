@@ -305,7 +305,8 @@ UpdateM7Params:
 
     ; A =  cos(matrix_angle) * SCALE
     jsr @GetCos
-    .call ASR
+    .call ASR16
+    .call ASR16
     sta @m7_a
     ; D =  cos(matrix_angle) * SCALE
     sta @m7_d
@@ -313,7 +314,8 @@ UpdateM7Params:
     lda 01
     ; B =  sin(matrix_angle) * SCALE
     jsr @GetSin
-    .call ASR
+    .call ASR16
+    .call ASR16
     sta @m7_b
     ; C = -sin(matrix_angle) * SCALE
     eor #ffff
