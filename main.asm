@@ -288,9 +288,6 @@ CenterCam:
 UpdateM7Params:
     php
 
-    .call RESERVE_STACK_FRAME 02
-    ; 01/02 -> matrix angle
-
     .call M16
 
     ; matrix_angle = - player_angle - 90
@@ -301,7 +298,7 @@ UpdateM7Params:
     sec
     sbc #0040
     and #00ff
-    sta 01
+    sta @ax
 
     ; A =  cos(matrix_angle) * SCALE
     jsr @GetCos
@@ -311,7 +308,7 @@ UpdateM7Params:
     ; D =  cos(matrix_angle) * SCALE
     sta @m7_d
 
-    lda 01
+    lda @ax
     ; B =  sin(matrix_angle) * SCALE
     jsr @GetSin
     .call ASR16
@@ -333,9 +330,6 @@ UpdateM7Params:
     clc
     adc #0070
     sta @m7_y
-
-    .call M8
-    .call RESTORE_STACK_FRAME 02
 
     plp
     rts
