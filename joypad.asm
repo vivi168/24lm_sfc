@@ -94,32 +94,27 @@ add_y_coord:
     bra @check_direction_keys
 
 turn_left:
-    dec @player_angle
-    bra @keep_angle_in_bound
+    lda @player_angle
+    dec
+    dec
+    and #00ff
+    sta @player_angle
+    bra @exit_handle_input
 
 turn_right:
-    inc @player_angle
-
-keep_angle_in_bound:
     lda @player_angle
-    bmi @set_angle ; < 0 ? -> 359
-    cmp #0168 ; >= 360 ? -> 0
-    bcs @reset_angle
-    bra @exit_handle_input
-reset_angle:
-    stz @player_angle
-    bra @exit_handle_input
-set_angle:
-    lda #0167 ; angle = 359
+    inc
+    inc
+    and #00ff
     sta @player_angle
 
 exit_handle_input:
     lda @player_angle
-    asl ; entries are two bytes
-    tax
-    lda !cosines_lut,x
+    jsr @GetCos
     sta @player_dx
-    lda !sines_lut,x
+
+    lda @player_angle
+    jsr @GetSin
     sta @player_dy
 
     plp

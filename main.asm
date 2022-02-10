@@ -31,7 +31,7 @@ MainLoop:
     jsr @UpdatePlayer
     jsr @UpdatePlayerOAM
 
-    jsr @UpdateM7Params
+    ; jsr @UpdateM7Params
 
     jmp @MainLoop
 
@@ -371,5 +371,6 @@ store_m7_b:
 
     plp
     rts
+
 
 .include info.asm

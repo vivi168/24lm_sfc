@@ -70,3 +70,35 @@ asl_32_loop:
 
     plp
     rts
+
+; angle in A:16
+; result in A:16
+GetSin:
+    asl
+    bit #0100
+    bne @negative_sin
+
+    tax
+    lda !binrad_sines_lut,x
+    bra @exit_get_sin
+
+negative_sin:
+    and #00ff
+    tax
+    lda !binrad_sines_lut,x
+    eor #ffff
+    inc
+
+exit_get_sin:
+
+    rts
+
+; angle in A:16
+; result in A:16
+GetCos:
+    clc
+    adc #0040
+    and #00ff
+    jsr @GetSin
+
+    rts

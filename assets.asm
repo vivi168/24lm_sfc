@@ -12,3 +12,5 @@ circuit_zip: .incbin assets/24lm.map.zip
 
 sines_lut:   .incbin assets/sines.bin
 cosines_lut: .incbin assets/cosines.bin
+
+binrad_sines_lut:   .incbin assets/binrad_sines.bin
