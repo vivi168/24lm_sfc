@@ -217,3 +217,24 @@
     ; lda RDMPYL  ; Mul Product, lower byte
     ; lda RDMPYH  ; Mul Product, higher byte
 .endm
+
+.macro ASR
+    brk 00
+    beq @exit_asr%MACRO_ID
+    bpl @skip_neg_asr%MACRO_ID
+
+    eor #ffff
+    inc
+
+    lsr
+    lsr
+
+    eor #ffff
+    inc
+    bra @exit_asr%MACRO_ID
+
+skip_neg_asr%MACRO_ID:
+    lsr
+    lsr
+exit_asr%MACRO_ID:
+.endm
