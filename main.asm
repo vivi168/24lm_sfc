@@ -32,6 +32,7 @@ MainLoop:
     jsr @UpdatePlayerOAM
 
     jsr @UpdateM7Params
+    jsr @UpdateM7HDMATables
 
     jmp @MainLoop
 
@@ -153,7 +154,6 @@ end_column_update:
     ; next_row_y
     lda @next_dst_y
     sta @cx
-    brk 00
     jsr @CopyNextCol
     lda @need_update
     ora #0001
@@ -221,7 +221,6 @@ end_row_update:
     ; next_col_x
     lda @next_dst_x
     sta @cx
-    brk 01
     jsr @CopyNextRow
     lda @need_update
     ora #0100
@@ -334,5 +333,121 @@ UpdateM7Params:
     plp
     rts
 
+UpdateM7HDMATables:
+    php
+
+    .call RESERVE_STACK_FRAME 04
+    ; 01/02 -> next cos
+    ; 03/04 -> next sin
+
+
+    ; for 96 scanlines...
+    lda #60
+    sta !m7_a_hdma_table
+    sta !m7_b_hdma_table
+    sta !m7_c_hdma_table
+    sta !m7_d_hdma_table
+
+    ; set default params for M7 A,D (0x100)
+    .call M16
+    lda #0100
+    sta !m7_a_hdma_table+1
+    sta !m7_d_hdma_table+1
+
+    ; set default params for M7 A,D (0x0)
+    lda #0000
+    sta !m7_b_hdma_table+1
+    sta !m7_c_hdma_table+1
+
+    ; terminate hdma table with 0x00 0x00
+    ldx #00c3
+    lda #0000
+    sta !m7_a_hdma_table,x
+    sta !m7_b_hdma_table,x
+    sta !m7_c_hdma_table,x
+    sta !m7_d_hdma_table,x
+
+    brk 00
+    lda @m7_a
+    sta @ax ; base_cos
+    sta @cx ; cos_step
+
+    lda @m7_b
+    sta @bx ; base_sin
+    sta @dx ; sin_step
+
+    ldy #0040
+fill_tables_loop:
+
+    jsr @ComputeNextCos
+    sta 01
+
+    jsr @ComputeNextSin
+    sta 03
+
+    dex
+    dex
+
+    ; set angle value
+    lda 01
+    sta !m7_a_hdma_table,x
+    sta !m7_d_hdma_table,x
+
+    lda 03
+    sta !m7_b_hdma_table,x
+
+    eor #ffff
+    inc
+    sta !m7_c_hdma_table,x
+
+    ; set number of scanline (2)
+    dex
+    .call M8
+    lda #02
+    sta !m7_a_hdma_table,x
+    sta !m7_d_hdma_table,x
+    sta !m7_b_hdma_table,x
+    sta !m7_c_hdma_table,x
+    .call M16
+
+    dey
+    bne @fill_tables_loop
+
+
+    .call M8
+    .call RESTORE_STACK_FRAME 04
+
+    plp
+    rts
+
+
+ComputeNextCos:
+    ; base_cos += cos_step
+    lda @ax
+    clc
+    adc @cx
+    sta @ax
+    ; next_cos = base_cos >> 4
+    .call ASR16
+    .call ASR16
+    .call ASR16
+    .call ASR16
+
+    rts
+
+ComputeNextSin:
+    ; base_sin += sin_step
+    lda @bx
+    clc
+    adc @dx
+    sta @bx
+    ; next_sin = base_sin >> 4
+    .call ASR16
+    .call ASR16
+    .call ASR16
+    .call ASR16
+
+
+    rts
 
 .include info.asm

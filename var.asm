@@ -105,6 +105,13 @@ oam_buffer:               .rb 200
 oam_buffer_hi:            .rb 20
 decompression_buffer:     .rb 1000 ; decompression buffer
 
+.org 7e7500
+
+m7_a_hdma_table: .rb 100
+m7_b_hdma_table: .rb 100
+m7_c_hdma_table: .rb 100
+m7_d_hdma_table: .rb 100
+
 .org 7f0000
 
 circuit:                  .rb 10000
