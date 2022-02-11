@@ -218,6 +218,14 @@
     ; lda RDMPYH  ; Mul Product, higher byte
 .endm
 
+
+.macro WAIT8
+    nop         ; wait 8 cycles
+    nop
+    nop
+    nop
+.endm
+
 .macro ASR8
     cmp #80
     ror

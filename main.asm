@@ -299,32 +299,28 @@ UpdateM7Params:
     and #00ff
     sta @ax
 
-    ; A =  cos(matrix_angle) * SCALE
-    jsr @GetCos
-    .call ASR16
-    .call ASR16
+    ; A =  cos(matrix_angle)
+    jsr @GetCosM7
     sta @m7_a
-    ; D =  cos(matrix_angle) * SCALE
+    ; D =  cos(matrix_angle)
     sta @m7_d
 
     lda @ax
-    ; B =  sin(matrix_angle) * SCALE
-    jsr @GetSin
-    .call ASR16
-    .call ASR16
+    ; B =  sin(matrix_angle)
+    jsr @GetSinM7
     sta @m7_b
-    ; C = -sin(matrix_angle) * SCALE
+    ; C = -sin(matrix_angle)
     eor #ffff
     inc
     sta @m7_c
 
-    ; X = screen_x - SCREEN_W/2
+    ; X = screen_x + SCREEN_W/2
     lda @screen_x
     clc
     adc #0080
     sta @m7_x
 
-    ; Y = screen_y - SCREEN_H/2
+    ; Y = screen_y + SCREEN_H/2
     lda @screen_y
     clc
     adc #0070
@@ -337,12 +333,13 @@ UpdateM7HDMATables:
     php
 
     .call RESERVE_STACK_FRAME 04
-    ; 01/02 -> next cos
-    ; 03/04 -> next sin
+    ; 01 -> cos positive?
+    ; 02 -> sin positive?
+    ; 03/04 -> multiply result
 
 
-    ; for 96 scanlines...
-    lda #60
+    ; for 78 scanlines...
+    lda #4e
     sta !m7_a_hdma_table
     sta !m7_b_hdma_table
     sta !m7_c_hdma_table
@@ -359,95 +356,207 @@ UpdateM7HDMATables:
     sta !m7_b_hdma_table+1
     sta !m7_c_hdma_table+1
 
-    ; terminate hdma table with 0x00 0x00
-    ldx #00c3
+
+; ---- Check if angle is positive
+
+    stz 01 ; neg cos = false, neg sin = false
+
+    lda @m7_a
+    bpl @m7_a_positive
+
+    ; if cos_a < 0: cos_a = -cos_a
+    eor #ffff
+    inc
+    sta @m7_a
+
+    ; neg_cos_result = True
+    lda #0001
+    ora 01
+    sta 01
+
+m7_a_positive:
+    lda @m7_b
+    bpl @m7_b_positive
+
+    ; if sin_a < 0: sin_a = -sin_a
+    eor #ffff
+    inc
+    sta @m7_b
+
+    lda #0100
+    ora 01
+    sta 01
+
+m7_b_positive:
+
+
+; ---- Fill Tables loop
+
+    ldy #0000
+    ldx #0003 ; start from index 3 of the table
+fill_tables_loop:
+
+    .call M8
+    lda #01
+    sta !m7_a_hdma_table,x
+    sta !m7_b_hdma_table,x
+    sta !m7_c_hdma_table,x
+    sta !m7_d_hdma_table,x
+
+
+
+    brk 00
+    ; lam = lam_lut[i]
+    phx ; save x
+    tyx
+    lda !lambda_lut,x
+    plx ; restore x
+    sta WRMPYA
+
+    lda @m7_a
+    sta WRMPYB
+
+    .call WAIT8
+
+    ; A = (cos_a * lam) >> 6
+    .call M16
+    lda RDMPYL
+    .call LSR3
+    .call LSR3
+    sta 03
+
+
+    ;if neg_cos_result:  A = (A ^ 0xffff) + 1
+    .call M8
+    lda 01
+    beq @skip_neg_cos_result
+
+    .call M16
+
+    lda 03
+    eor #ffff
+    inc
+    sta 03
+
+skip_neg_cos_result:
+    inx
+    .call M16
+    lda 03
+    sta !m7_a_hdma_table,x
+    sta !m7_d_hdma_table,x
+
+    lda #bbcc
+    sta !m7_b_hdma_table,x
+    sta !m7_c_hdma_table,x
+
+    inx
+    inx
+    iny
+    cpy #0092; for 146 scanlines
+    bne @fill_tables_loop
+
+
+    ; terminate hdma tables with 0x00 0x00
     lda #0000
     sta !m7_a_hdma_table,x
     sta !m7_b_hdma_table,x
     sta !m7_c_hdma_table,x
     sta !m7_d_hdma_table,x
 
-    brk 00
-    lda @m7_a
-    sta @ax ; base_cos
-    sta @cx ; cos_step
 
-    lda @m7_b
-    sta @bx ; base_sin
-    sta @dx ; sin_step
 
-    ldy #0040
-fill_tables_loop:
+                ;     ; terminate hdma table with 0x00 0x00
+                ;     ldx #01b9
+                ;     lda #0000
+                ;     sta !m7_a_hdma_table,x
+                ;     sta !m7_b_hdma_table,x
+                ;     sta !m7_c_hdma_table,x
+                ;     sta !m7_d_hdma_table,x
 
-    jsr @ComputeNextCos
-    sta 01
+                ;     brk 00
+                ;     lda @m7_a
+                ;     sta @ax ; base_cos
+                ;     sta @cx ; cos_step
 
-    jsr @ComputeNextSin
-    sta 03
+                ;     lda @m7_b
+                ;     sta @bx ; base_sin
+                ;     sta @dx ; sin_step
 
-    dex
-    dex
+                ;     ldy #0040
+                ; fill_tables_loop:
 
-    ; set angle value
-    lda 01
-    sta !m7_a_hdma_table,x
-    sta !m7_d_hdma_table,x
+                ;     jsr @ComputeNextCos
+                ;     sta 01
 
-    lda 03
-    sta !m7_b_hdma_table,x
+                ;     jsr @ComputeNextSin
+                ;     sta 03
 
-    eor #ffff
-    inc
-    sta !m7_c_hdma_table,x
+                ;     dex
+                ;     dex
 
-    ; set number of scanline (2)
-    dex
-    .call M8
-    lda #02
-    sta !m7_a_hdma_table,x
-    sta !m7_d_hdma_table,x
-    sta !m7_b_hdma_table,x
-    sta !m7_c_hdma_table,x
-    .call M16
+                ;     ; set angle value
+                ;     lda 01
+                ;     sta !m7_a_hdma_table,x
+                ;     sta !m7_d_hdma_table,x
 
-    dey
-    bne @fill_tables_loop
+                ;     lda 03
+                ;     sta !m7_b_hdma_table,x
 
+                ;     eor #ffff
+                ;     inc
+                ;     sta !m7_c_hdma_table,x
+
+                ;     ; set number of scanline (2)
+                ;     dex
+                ;     .call M8
+                ;     lda #02
+                ;     sta !m7_a_hdma_table,x
+                ;     sta !m7_d_hdma_table,x
+                ;     sta !m7_b_hdma_table,x
+                ;     sta !m7_c_hdma_table,x
+                ;     .call M16
+
+                ;     dey
+                ;     bne @fill_tables_loop
+
+
+                ; .call M8
+                ; .call RESTORE_STACK_FRAME 04
+
+                ;     plp
+                ;     rts
+
+
+                ; ComputeNextCos:
+                ;     ; base_cos += cos_step
+                ;     lda @ax
+                ;     clc
+                ;     adc @cx
+                ;     sta @ax
+                ;     ; next_cos = base_cos >> 4
+                ;     .call ASR16
+                ;     .call ASR16
+                ;     .call ASR16
+                ;     .call ASR16
+
+                ;     rts
+
+                ; ComputeNextSin:
+                ;     ; base_sin += sin_step
+                ;     lda @bx
+                ;     clc
+                ;     adc @dx
+                ;     sta @bx
+                ;     ; next_sin = base_sin >> 4
+                ;     .call ASR16
+                ;     .call ASR16
+                ;     .call ASR16
+                ;     .call ASR16
 
     .call M8
     .call RESTORE_STACK_FRAME 04
 
     plp
-    rts
-
-
-ComputeNextCos:
-    ; base_cos += cos_step
-    lda @ax
-    clc
-    adc @cx
-    sta @ax
-    ; next_cos = base_cos >> 4
-    .call ASR16
-    .call ASR16
-    .call ASR16
-    .call ASR16
-
-    rts
-
-ComputeNextSin:
-    ; base_sin += sin_step
-    lda @bx
-    clc
-    adc @dx
-    sta @bx
-    ; next_sin = base_sin >> 4
-    .call ASR16
-    .call ASR16
-    .call ASR16
-    .call ASR16
-
-
     rts
 
 .include info.asm
