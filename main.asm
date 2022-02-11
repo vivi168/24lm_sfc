@@ -302,13 +302,13 @@ UpdateM7Params:
     ; A =  cos(matrix_angle)
     jsr @GetCosM7
     sta @m7_a
-    sta @m7_d
+    sta @m7_d ; acts as a m7_a backup to check sign later...
 
     lda @ax
     ; B =  sin(matrix_angle)
     jsr @GetSinM7
     sta @m7_b
-    sta @m7_c
+    sta @m7_c ; acts as a m7_b backup to check sign later...
 
     ; X = screen_x + SCREEN_W/2
     lda @screen_x
@@ -371,7 +371,6 @@ m7_a_positive:
 
 m7_b_positive:
 
-
 ; ---- Fill Tables loop
 
     ldy #0000
@@ -385,9 +384,6 @@ fill_tables_loop:
     sta !m7_c_hdma_table,x
     sta !m7_d_hdma_table,x
 
-
-
-    brk 00
     ; lam = lam_lut[i]
     phx ; save x
     tyx
@@ -399,10 +395,6 @@ fill_tables_loop:
     jsr @SaveADParams
     jsr @SaveBCParams
 
-
-
-
-; ---- B/C params
     inx
     inx
     iny
@@ -421,7 +413,6 @@ fill_tables_loop:
 
     plp
     rts
-
 
 
 SaveADParams:
@@ -443,11 +434,9 @@ SaveADParams:
 
     sta @bx ; save result
 
-
     ;if neg_cos_result:  A = (A ^ 0xffff) + 1
     lda @m7_d
     bpl @skip_neg_cos_result
-
 
     lda @bx
     eor #ffff
