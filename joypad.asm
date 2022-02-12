@@ -40,7 +40,7 @@ HandleInput:
     bit #BUTTON_A
     bne @accelerate
 
-ronrure:
+check_direction_keys:
     lda @joy1_held
     bit #BUTTON_LEFT
     bne @turn_left
@@ -52,80 +52,155 @@ ronrure:
     jmp @exit_handle_input
 
 accelerate:
-    lda @player_x
-    clc
-    adc @player_dx
-    sta @player_x
+    ; X coordinate
+    lda @player_fx_lo
+    sta @ax
+    lda @player_fx_hi
+    sta @bx
 
-    lda @player_y
-    clc
-    adc @player_dy
-    sta @player_y
+    stz @dx
+    lda @player_dx
+    sta @cx
 
-    bra @ronrure
+    bpl @add_x_coord
+    dec @dx ; wrap dx at 0xffff (negative)
+add_x_coord:
+    jsr @Add32
+    lda @ax
+    sta @player_fx_lo
+    lda @bx
+    sta @player_fx_hi
+
+
+    ; Y coordinate
+    lda @player_fy_lo
+    sta @ax
+    lda @player_fy_hi
+    sta @bx
+
+    stz @dx
+    lda @player_dy
+    sta @cx
+
+    bpl @add_y_coord
+    dec @dx ; wrap dx at 0xffff (negative)
+add_y_coord:
+    jsr @Add32
+    lda @ax
+    sta @player_fy_lo
+    lda @bx
+    sta @player_fy_hi
+
+    bra @check_direction_keys
 
 turn_left:
-    lda @player_angle
-    dec
-    dec
-    dec
-    sta @player_angle
-
+    dec @player_angle
     bra @keep_angle_in_bound
 
 turn_right:
-    lda @player_angle
-    inc
-    inc
-    inc
-    sta @player_angle
-
-    bra @keep_angle_in_bound
-
+    inc @player_angle
 
 keep_angle_in_bound:
     lda @player_angle
     bmi @set_angle ; < 0 ? -> 359
-    cmp #0168 ; #0168 ; >= 360 ? -> 0
+    cmp #0168 ; >= 360 ? -> 0
     bcs @reset_angle
-    bra @ronre
+    bra @exit_handle_input
 reset_angle:
     stz @player_angle
-    bra @ronre
+    bra @exit_handle_input
 set_angle:
-    lda #0167 ; #0167
+    lda #0167 ; angle = 359
     sta @player_angle
 
-ronre:
-    brk 00
 exit_handle_input:
-    .call M8
-    ldx @player_angle
+    lda @player_angle
+    asl ; entries are two bytes
+    tax
     lda !cosines_lut,x
-    bpl @isse1
-    .call M16
-    ora #ff00
     sta @player_dx
-    bra @sin_test
-isse1:
-    .call M16
-    and #00ff
-    sta @player_dx
-
-sin_test:
-    .call M8
     lda !sines_lut,x
-    bpl @isse2
-    .call M16
-    ora #ff00
-    sta @player_dy
-    bra @sin_end
-isse2:
-    .call M16
-    and #00ff
     sta @player_dy
 
-sin_end:
     plp
     rts
 
+HandleInput2:
+    php
+
+    .call M16
+
+    stz @dx
+
+    lda @joy1_held
+    bit #BUTTON_LEFT
+    bne @go_left
+
+    bit #BUTTON_RIGHT
+    bne @go_right
+
+    bit #BUTTON_UP
+    bne @go_up
+
+    bit #BUTTON_DOWN
+    bne @go_down
+
+    jmp @exit_handle_input2
+
+
+go_left:
+    ;
+    lda #fc00
+    jmp @add_velocity_x
+go_right:
+    ;
+    lda #0400
+    jmp @add_velocity_x
+go_up:
+    lda #fc00
+    jmp @add_velocity_y
+go_down:
+    lda #0400
+    jmp @add_velocity_y
+
+
+add_velocity_x:
+    sta @cx
+
+    bpl @add_x_coord2
+    dec @dx ; wrap dx at 0xffff (negative)
+add_x_coord2:
+    lda @player_fx_lo
+    sta @ax
+    lda @player_fx_hi
+    sta @bx
+
+    jsr @Add32
+    lda @ax
+    sta @player_fx_lo
+    lda @bx
+    sta @player_fx_hi
+    bra @exit_handle_input2
+
+add_velocity_y:
+    sta @cx
+
+    bpl @add_y_coord2
+    stz @dx
+    dec @dx ; wrap dx at 0xffff (negative)
+add_y_coord2:
+    lda @player_fy_lo
+    sta @ax
+    lda @player_fy_hi
+    sta @bx
+
+    jsr @Add32
+    lda @ax
+    sta @player_fy_lo
+    lda @bx
+    sta @player_fy_hi
+
+exit_handle_input2:
+
+    plp
+    rts

@@ -22,6 +22,13 @@
     rep #30
 .endm
 
+; multiply by 8
+.macro ASL3
+    asl
+    asl
+    asl
+.endm
+
 ; multiply by 16
 .macro ASL4
     asl
@@ -37,6 +44,13 @@
     asl
     asl
     asl
+.endm
+
+; divide by 8
+.macro LSR3
+    lsr
+    lsr
+    lsr
 .endm
 
 ; divide by 16
@@ -71,6 +85,28 @@
 
 .macro VRAM_DMA_TRANSFER_TEST dest_addr, src_addr, nb_bytes, vmdata
     ldx #%dest_addr
+    stx VMADDL
+
+    lda #%vmdata
+    sta BBAD0
+
+    ldx #@%src_addr
+    stx A1T0L
+    lda #^%src_addr
+    sta A1T0B
+
+    ldx #%nb_bytes
+    stx DAS0L
+
+    lda #00
+    sta DMAP0
+
+    lda #01
+    sta MDMAEN
+.endm
+
+.macro VRAM_DMA_TRANSFER_TEST2 dest_addr, src_addr, nb_bytes, vmdata
+    ldx @%dest_addr
     stx VMADDL
 
     lda #%vmdata

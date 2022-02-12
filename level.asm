@@ -1,115 +1,363 @@
 ; copy initial 128x128 tilemap to BG Buffer
-; (64x64 portion from circuit)
-; input coordinates X, Y in X
+; (64x64 portion from circuit, circuit is composed of 2x2 metatiles)
+; ax -> src_x
+; bx -> src_y
+; cx -> dst_x
+; dx -> dst_y
 InitTileMap:
-    .call RESERVE_STACK_FRAME 09
-    ; 01 02 03 : bg1_buffer address
-    ; 04/05 -> start X
-    ; 06/07 -> start Y
-    ; 08/09 -> loop counter
-
-    .call M16
-    txa
-    and #00ff
-    sta 06
-    txa
-    and #ff00
-    xba
-    sta 04
-    stz 08
-    .call M8
-
-    ldx #@bg1_buffer
-    stx 01
-    lda #^bg1_buffer
-    sta 03
-
-    lda 06	; Y
-    sta @multiplicand
-    lda #ff	; map_w - 1
-    sta @multiplier
-
-    .call MULTIPLY
-    .call M16
-    lda RDMPYL
-    clc
-    adc 06	; Y (add one more time, multiplied by 0xff, we want by 0x100)
-    adc 04	; X
-    tax     ; initial index. loop from there
-
-    ldy #0000
+    ldy #0000 ; loop counter
 init_tilemap_loop:
-    ; metatile idx
-    lda !circuit,x
-
-    ; ---- get metatile info
-    phx
     phy
-    and #00ff
-    asl
-    asl
-    tax
-    .call M8
-    ; Y
-    lda !metatiles,x
-    sta [01],y
-
-    ; Y + 1
-    iny
-    lda !metatiles+1,x
-    sta [01],y
-
-    ; Y + 128
-    .call M16
-    tya
-    clc
-    adc #007f
-    tay
-    .call M8
-    lda !metatiles+2,x
-    sta [01],y
-
-    ; y + 129
-    iny
-    lda !metatiles+3,x
-    sta [01],y
-
-    .call M16
+    jsr @CopyColumn
     ply
-    plx
 
-    tya
+    .call M16
+    inc @ax ; src_x ++
+    lda @cx ; dst_x += 2 (copy 1 col of metatile = 2 col of 8x8 tiles)
     inc
     inc
-    bit #007f
-    bne @skip_y_wrap
-    adc #0080
-skip_y_wrap:
-    tay
-    ; ----
+    and #007f ; wrap dst_x at 0
+    sta @cx
+    .call M8
 
-    inx
-    inc 08
-    lda 08
-    bit #003f
-    bne @skip_wrap_row
-    txa
-    clc
-    adc #00c0
-    tax
-    lda 08
-skip_wrap_row:
-    cmp #1000
+    iny
+    cpy #0040 ; 64 x2 tiles columns (BUF_W / 2)
     bne @init_tilemap_loop
 
-    .call M8
-    .call RESTORE_STACK_FRAME 09
     rts
 
 ; update one column of tilemap
+; ax -> src_x
+; bx -> src_y
+; cx -> dst_x
+; dx -> dst_y
 CopyColumn:
+    .call RESERVE_STACK_FRAME 08
+    ; 01/02    -> src_i
+    ; 03/04    -> dst_i
+    ; 05       -> loop counter
+    ; 06/07/08 -> bg_buffer addr
+
+    ldx #@bg1_buffer
+    stx 06
+    lda #^bg1_buffer
+    sta 08
+
+    .call M16
+    lda @bx
+    .call ASL3
+    .call ASL5 ; bx *= 256 (MAP_W)
+    clc
+    adc @ax
+    sta 01
+
+    lda @dx
+    .call ASL3
+    .call ASL4 ; dx *= 128 (BUF_W)
+    clc
+    adc @cx
+    sta 03
+    .call M8
+
+    ; loop counter
+    stz 05
+copy_column_loop:
+
+    ; uint8_t mi = circuit[src_i];
+    ldx 01
+    lda !circuit,x
+    .call M16
+    and #00ff
+    ; mi *= 4
+    asl
+    asl
+    tax
+    .call M8
+
+    ; bg1_buffer[dst_i]         = metatiles[mi * 4]
+    lda !metatiles,x
+    ldy 03
+    sta [06],y
+
+    ; bg1_buffer[dst_i+1]       = metatiles[mi * 4 + 1]
+    iny
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+    ; bg1_buffer[dst_i+BUF_W]   = metatiles[mi * 4 + 2]
+    .call M16
+    lda 03
+    clc
+    adc #0080 ; += BUF_W
+    tay
+    .call M8
+
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+    ; bg1_buffer[dst_i+BUF_W+1] = metatiles[mi * 4 + 3]
+    iny
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+    ; // next src idx
+    ; src_i += MAP_W
+    .call M16
+    lda 01
+    clc
+    adc #0100 ; MAP_W
+    sta 01
+
+    ; // next dst idx
+    ; dst_i = (dst_i + BUF_W + BUF_W) % 16384;
+    lda 03
+    clc
+    adc #0100 ; BUF_W + BUF_W
+    and #3fff
+    sta 03
+
+    .call M8
+
+    inc 05
+    lda 05
+    cmp #40 ; 64 x2 tiles columns (BUF_H / 2)
+    bne @copy_column_loop
+
+    .call RESTORE_STACK_FRAME 08
     rts
 
-; update one row of tilemap
-CopyRow:
+; copy next row in next_row
+; ax -> src_x
+; bx -> src_y
+; cx -> dst_x (offset)
+CopyNextRow:
+    php
+
+    .call M8
+
+    .call RESERVE_STACK_FRAME 08
+    ; 01/02    -> src_i
+    ; 03/04    -> dst_i
+    ; 05       -> loop counter
+    ; 06/07/08 -> bg_buffer addr
+
+    ldx #@next_row
+    stx 06
+    lda #^next_row
+    sta 08
+
+    .call M16
+    lda @bx
+    .call ASL3
+    .call ASL5 ; bx *= 256 (MAP_W)
+    clc
+    adc @ax
+    sta 01
+
+    lda @cx
+    sta 03
+    .call M8
+
+    ; loop counter
+    stz 05
+copy_row_loop:
+
+    ; uint8_t mi = circuit[src_i];
+    ldx 01
+    lda !circuit,x
+    .call M16
+    and #00ff
+    ; mi *= 4
+    asl
+    asl
+    tax
+    .call M8
+
+    ; next_row[dst_i]         = metatiles[mi * 4]
+    lda !metatiles,x
+    ldy 03
+    sta [06],y
+
+    ; next_row[dst_i+1]       = metatiles[mi * 4 + 1]
+    iny
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+    ; next_row[dst_i+BUF_W]   = metatiles[mi * 4 + 2]
+    .call M16
+    lda 03
+    clc
+    adc #0080 ; += BUF_W
+    tay
+    .call M8
+
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+    ; next_row[dst_i+BUF_W+1] = metatiles[mi * 4 + 3]
+    iny
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+
+    ; // next src idx
+    ; src_i ++
+    .call M16
+    inc 01
+    ; if src_i > 0 and src_i % MAP_W == 0: src_i -= MAP_W
+    lda 01
+    beq @skip_row_wrap1
+    bit #00ff
+    bne @skip_row_wrap1
+    sec
+    sbc #0100
+    sta 01
+
+skip_row_wrap1:
+
+    ; // next dst idx
+    ; dst_i += 2
+    inc 03
+    inc 03
+    ; if dst_i > 0 and dst_i % BUF_W == 0: dst_i -= BUF_W
+    lda 03
+    beq @skip_row_wrap2
+    bit #007f
+    bne @skip_row_wrap2
+    sec
+    sbc #0080
+    sta 03
+
+skip_row_wrap2:
+    .call M8
+
+    inc 05
+    lda 05
+    cmp #40 ; 64 x2 tiles rows
+    bne @copy_row_loop
+
+    .call RESTORE_STACK_FRAME 08
+
+    plp
+    rts
+
+
+; copy next col in next_col
+; ax -> src_x
+; bx -> src_y
+; cx -> dst_y (offset)
+; dx -> scratch
+CopyNextCol:
+    php
+
+    .call M8
+
+    .call RESERVE_STACK_FRAME 08
+    ; 01/02    -> src_i
+    ; 03/04    -> dst_i
+    ; 05       -> loop counter
+    ; 06/07/08 -> bg_buffer addr
+
+    ldx #@next_col
+    stx 06
+    lda #^next_col
+    sta 08
+
+    .call M16
+    lda @bx
+    .call ASL3
+    .call ASL5 ; bx *= 256 (MAP_W)
+    clc
+    adc @ax
+    sta 01
+
+    lda @cx
+    sta 03
+    .call M8
+
+    ; loop counter
+    stz 05
+copy_next_col_loop:
+
+    ; uint8_t mi = circuit[src_i];
+    ldx 01
+    lda !circuit,x
+    .call M16
+    and #00ff
+    ; mi *= 4
+    asl
+    asl
+    tax
+    .call M8
+
+    ; next_col[dst_i]         = metatiles[mi * 4]               0
+    lda !metatiles,x
+    ldy 03 ; dst_i
+    sta [06],y
+
+    ; next_col[dst_i+1]       = metatiles[mi * 4 + 1]           dst_i + BUF_W
+    .call M16
+    lda 03
+    clc
+    adc #0080 ; += BUF_W
+    tay
+    sta @dx
+    inc @dx
+    .call M8
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+    ; next_col[dst_i+BUF_W]   = metatiles[mi * 4 + 2]            dst_i + 1
+    ldy 03
+    iny
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+    ; next_col[dst_i+BUF_W+1] = metatiles[mi * 4 + 3]              3 -> 3
+    ldy @dx
+    inx
+    lda !metatiles,x
+    sta [06],y
+
+
+    ; // next src idx
+    ; src_i += MAP_W
+    .call M16
+    lda 01
+    clc
+    adc #0100 ; MAP_W
+    sta 01
+
+    ; // next dst idx
+    ; dst_i += 2
+    inc 03
+    inc 03
+    ; if dst_i > 0 and dst_i % BUF_W == 0: dst_i -= BUF_W
+    lda 03
+    beq @skip_col_wrap
+    bit #007f
+    bne @skip_col_wrap
+    sec
+    sbc #0080
+    sta 03
+
+skip_col_wrap:
+    .call M8
+
+    inc 05
+    lda 05
+    cmp #40 ; 64 x2 tiles cols
+    bne @copy_next_col_loop
+
+    .call RESTORE_STACK_FRAME 08
+
+    plp
     rts

@@ -95,24 +95,16 @@ ClearRegisters:
     stz @joy1_raw
     stz @joy1_press
     stz @joy1_held
-    stz @horizontal_offset
-    stz @vertical_offset
 
-    stz @next_column_read
-    stz @next_column_write
-    stz @next_row_read
-    stz @next_row_write
+    stz @next_col_x
+    stz @next_row_y
 
-    stz @player_x
-    stz @player_y
     stz @player_angle
     ldx @player_angle
     lda !cosines_lut,x
-    and #00ff
     sta @player_dx
 
     lda !sines_lut,x
-    and #00ff
     sta @player_dy
     .call M8
 
@@ -120,4 +112,75 @@ ClearRegisters:
     stz @vblank_disable
     inc @vblank_disable
 
+    rts
+
+
+InitialSettings:
+    php
+    .call M16
+
+    stz @need_update
+
+    ; place player on start position (1104, 768)
+    ; player X -> 1104
+    lda #0450
+    sta @player_x
+    sta @ax
+    stz @bx
+    lda #000a ; shift by 10
+    sta @cx
+    jsr @Asl32
+    lda @ax
+    sta @player_fx_lo
+    lda @bx
+    sta @player_fx_hi
+
+    ; player Y -> 768
+    lda #0300
+    sta @player_y
+    sta @ax
+    stz @bx
+    lda #000a ; shift by 10
+    sta @cx
+    jsr @Asl32
+    lda @ax
+    sta @player_fy_lo
+    lda @bx
+    sta @player_fy_hi
+
+    ; SCREEN_OFFSET_X
+    lda #0188 ; 392, constant
+    sta @screen_x
+    ; SCREEN_OFFSET_Y
+    lda #0128 ; 296, constant
+    sta @screen_y
+
+    stz @next_dst_x
+    stz @next_dst_y
+
+    ; camera X = player_x - SCREEN_W / 2
+    lda @player_x
+    sec
+    sbc #0080 ; SCREEN_W / 2
+    sta @camera_x
+    sbc @screen_x
+    ; buffer.x = camera.x - SCREEN_OFFSET_X (screen.x = SCREEN_OFFSET_X at reset)
+    sta @ax
+    and #0fff
+    .call LSR4
+    sta @next_src_x
+
+    ; camera Y = player_y - SCREEN_H / 2
+    lda @player_y
+    sec
+    sbc #0070 ; SCREEN_H / 2
+    sta @camera_y
+    sbc @screen_y
+    ; buffer.y = camera.y - SCREEN_OFFSET_Y (screen.y = SCREEN_OFFSET_Y at reset)
+    sta @bx
+    and #0fff
+    .call LSR4
+    sta @next_src_y
+
+    plp
     rts
