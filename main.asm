@@ -318,8 +318,10 @@ UpdateM7Params:
 
     ; Y = screen_y + SCREEN_H/2
     lda @screen_y
+
+    ; Offset transformation towards the bottom
     clc
-    adc #0070
+    adc #00a8
     sta @m7_y
 
     plp

@@ -41,13 +41,18 @@ UpdatePlayerOAM:
     ; player.screen_x = player.x - camera.x;
     lda @player_x
     sec
+    ; Offset the player to the left (half a sprite wide)
     sbc @camera_x
+    sbc #0008
     sta @player_sx
 
     ; player.screen_y = player.y - camera.y;
     lda @player_y
     sec
     sbc @camera_y
+    ; Offset the player to the bottom (match with center of transformation)
+    clc
+    adc #0040
     sta @player_sy
     .call M8
 
