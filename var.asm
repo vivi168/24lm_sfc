@@ -68,6 +68,9 @@ player_sy:                .rb 2 ; position on screen
 camera_x:                 .rb 2
 camera_y:                 .rb 2
 
+; horizon
+horizon_scroll:           .rb 2
+
 ; mode 7
 m7_a: .rb 2
 m7_b: .rb 2

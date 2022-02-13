@@ -18,6 +18,7 @@
 .include math.asm
 .include joypad.asm
 .include level.asm
+.include horizon.asm
 .include object.asm
 .include hud.asm
 .include music.asm

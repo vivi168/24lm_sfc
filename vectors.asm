@@ -51,6 +51,8 @@ FastReset:
     .call M8
     jsr @InitTileMap
 
+    jsr @InitHorizon
+
     lda @screen_x
     sta BG1HOFS
     lda @screen_x+1
@@ -72,6 +74,9 @@ FastReset:
 
 ;  ---- DMA Transfers
 
+    ; transfer BGMODE 2 tiles
+    ; transfer palette
+
     ; transfer tilemap (write low byte of VRAM, then inc)
     lda #00
     sta VMAINC
@@ -83,7 +88,7 @@ FastReset:
     .call VRAM_DMA_TRANSFER_TEST 0000, bg1_tiles, 4000, 19
     .call VRAM_DMA_TRANSFER 6000, sprites_tiles, SPRITES_TILES_SIZE   ; VRAM[0xc000] (word step)
 
-    .call CGRAM_DMA_TRANSFER 00, bg1_pal, BG1_PALETTE_SIZE
+    .call CGRAM_DMA_TRANSFER 20, bg1_pal, BG1_PALETTE_SIZE
     .call CGRAM_DMA_TRANSFER 80, sprites_pal, SPRITES_PALETTE_SIZE  ; CGRAM[0x100] (word step)
 
     jsr @TransferOamBuffer

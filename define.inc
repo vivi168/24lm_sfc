@@ -2,7 +2,7 @@
 
 ; assets
 .define BG1_TILES_SIZE       4000
-.define BG1_PALETTE_SIZE     0100
+.define BG1_PALETTE_SIZE     00c0
 .define BG1_BUFFER_SIZE      8000
 .define SPRITES_TILES_SIZE   0800
 .define SPRITES_PALETTE_SIZE 0020
