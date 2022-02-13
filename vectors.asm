@@ -23,7 +23,7 @@ FastReset:
     lda #07             ; bg 3 high prio, mode 1
     sta BGMODE
 
-    lda #11             ; enable BG1 + sprites (0b10001)
+    lda #13             ; enable BG12 + sprites (0b10011)
     sta TM
 
 ;  ---- OBJ settings
@@ -53,6 +53,7 @@ FastReset:
 
     jsr @InitHorizon
 
+    ; bg 1 scroll
     lda @screen_x
     sta BG1HOFS
     lda @screen_x+1
@@ -61,6 +62,15 @@ FastReset:
     sta BG1VOFS
     lda @screen_y+1
     sta BG1VOFS
+
+    ; BG 2 scroll
+    lda #00
+    sta BG2VOFS
+    sta BG2VOFS
+    lda @horizon_scroll
+    sta BG2HOFS
+    lda @horizon_scroll+1
+    sta BG2HOFS
 
     ; MODE 7 CENTER/MATRIX PARAMS
     lda @m7_x
@@ -74,8 +84,11 @@ FastReset:
 
 ;  ---- DMA Transfers
 
-    ; transfer BGMODE 2 tiles
-    ; transfer palette
+    ; horizon
+    .call VRAM_DMA_TRANSFER 4400, horizon_map, HORIZON_MAP_SIZE         ; VRAM[0x8800] (word step)
+    .call VRAM_DMA_TRANSFER 4800, horizon_map, HORIZON_MAP_SIZE         ; VRAM[0x9000] (word step)
+    .call VRAM_DMA_TRANSFER 5000, horizon_tiles, HORIZON_TILES_SIZE       ; VRAM[0xA000] (word step)
+    .call CGRAM_DMA_TRANSFER 00, horizon_pal, HORIZON_PAL_SIZE
 
     ; transfer tilemap (write low byte of VRAM, then inc)
     lda #00
@@ -150,6 +163,7 @@ FastNmi:
 
     inc @frame_counter
 
+    ; bg 1 scroll
     lda @screen_x
     sta BG1HOFS
     lda @screen_x+1
@@ -158,6 +172,12 @@ FastNmi:
     sta BG1VOFS
     lda @screen_y+1
     sta BG1VOFS
+
+    ; bg 2 scroll
+    lda @horizon_scroll
+    sta BG2HOFS
+    lda @horizon_scroll+1
+    sta BG2HOFS
 
     ; MODE 7 CENTER/MATRIX PARAMS
     lda @m7_x

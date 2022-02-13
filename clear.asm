@@ -197,5 +197,8 @@ InitialSettings:
     .call LSR4
     sta @next_src_y
 
+    ; reset horizon
+    stz @horizon_scroll
+
     plp
     rts

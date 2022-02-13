@@ -8,6 +8,10 @@
 .define SPRITES_PALETTE_SIZE 0020
 .define COMPRESSED_CIRCUIT_SIZE 205f
 
+.define HORIZON_TILES_SIZE 02c0
+.define HORIZON_MAP_SIZE   0280
+.define HORIZON_PAL_SIZE   0020
+
 ; decompression
 .define EI 000b
 .define EJ 0004
