@@ -94,6 +94,8 @@ add_y_coord:
     bra @check_direction_keys
 
 turn_left:
+    dec @horizon_scroll
+    dec @horizon_scroll
     lda @player_angle
     dec
     and #00ff
@@ -101,6 +103,8 @@ turn_left:
     bra @exit_handle_input
 
 turn_right:
+    inc @horizon_scroll
+    inc @horizon_scroll
     lda @player_angle
     inc
     and #00ff

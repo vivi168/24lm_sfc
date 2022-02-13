@@ -9,12 +9,4 @@ InitHorizon:
     lda #45
     sta BG2SC ; BG2 MAP @ VRAM[8800], size 64x32 -> 0b10001_01
 
-
-    jsr @InitMode2BG1
-
-    rts
-
-InitMode2BG1:
-    rts
-InitMode2BG2:
     rts

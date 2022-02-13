@@ -85,6 +85,7 @@ FastReset:
 ;  ---- DMA Transfers
 
     ; horizon
+    .call CLEAR_VRAM_DMA 4000, 0800
     .call VRAM_DMA_TRANSFER 4400, horizon_map, HORIZON_MAP_SIZE         ; VRAM[0x8800] (word step)
     .call VRAM_DMA_TRANSFER 4800, horizon_map, HORIZON_MAP_SIZE         ; VRAM[0x9000] (word step)
     .call VRAM_DMA_TRANSFER 5000, horizon_tiles, HORIZON_TILES_SIZE       ; VRAM[0xA000] (word step)

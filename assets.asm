@@ -19,4 +19,6 @@ horizon_tiles: .incbin assets/horizon.tiles
 horizon_pal:   .incbin assets/horizon.pal
 horizon_map:   .incbin assets/horizon.map
 
+null_byte: .db 00
+
 end_assets:

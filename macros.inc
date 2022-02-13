@@ -61,6 +61,30 @@
     lsr
 .endm
 
+.macro CLEAR_VRAM_DMA dest_addr, nb_bytes
+    ldx #%dest_addr
+    stx VMADDL
+
+    lda #18             ; VMDATAL 21*18*
+    sta BBAD0
+
+    ldx #@null_byte
+    stx A1T0L
+    lda #^null_byte
+    sta A1T0B
+
+    ldx #%nb_bytes
+    stx DAS0L
+
+    ; 765 43 210
+    ; 000 01 001
+    lda #09
+    sta DMAP0
+
+    lda #01
+    sta MDMAEN
+.endm
+
 .macro VRAM_DMA_TRANSFER dest_addr, src_addr, nb_bytes
     ldx #%dest_addr
     stx VMADDL

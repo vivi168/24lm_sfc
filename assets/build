@@ -6,4 +6,4 @@ ruby csv_to_map.rb 24lm.csv
 ruby -I../../SNES_Utils/lib/ ../../SNES_Utils/bin/png2snes -f tiles.png -m -o 32 -a 000000
 
 
-superfamiconv -i horizon.png -p horizon.pal -t horizon.tiles -m horizon.map --out-tiles-image horizon.tiles.png --color-zero 00000000 -v
+superfamiconv -i horizon.png -p horizon.pal -t horizon.tiles -m horizon.map --out-tiles-image horizon.tiles.png -v
