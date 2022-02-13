@@ -164,7 +164,24 @@ FastNmi:
     lda @m7_y+1
     sta M7Y
 
-    ; TEST
+    jsr @TransferColRow
+
+    jsr @TransferOamBuffer
+
+    jsr @HdmaTest
+
+    jsr @ReadJoyPad1
+
+    inc @vblank_disable
+
+    .call MX16
+    ply
+    plx
+    pla
+    plp
+    rti
+
+TransferColRow:
     lda @need_update_row
     bit #01
     beq @check_transfer_next_col
@@ -204,21 +221,7 @@ check_transfer_next_col:
 
 skip_transfer_next_col:
 
-    jsr @TransferOamBuffer
-
-    jsr @HdmaTest
-
-    jsr @ReadJoyPad1
-
-    inc @vblank_disable
-
-    .call MX16
-    ply
-    plx
-    pla
-    plp
-    rti
-
+    rts
 
 HdmaTest:
     php
