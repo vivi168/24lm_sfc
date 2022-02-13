@@ -272,9 +272,26 @@ HdmaTest:
     lda #02
     sta DMAP6
 
-    ; start transfers via channels 3,4,5,6 (0111 1000)
-    lda #78
+    ; BGMODE via channel 7
+    lda #^BGModeHDMATable
+    sta A1T7B
+    ldx #@BGModeHDMATable
+    stx A1T7L
+
+    lda #05 ; via port 21*05* (BGMODE)
+    sta BBAD7
+
+    lda #00 ; mode 1, transfer 1 byte
+    sta DMAP7
+
+    ; start transfers via channels 3,4,5,6 (1111 1000)
+    lda #f8
     sta HDMAEN
 
     plp
     rts
+
+; mode 2, then wait 78 scanlines
+; mode 7, until end of this frame
+BGModeHDMATable:
+    .db 4e,02,01,07,00
