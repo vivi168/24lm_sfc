@@ -1,3 +1,6 @@
 #!/bin/bash
 
+ruby csv_to_map.rb 24lm.csv
+./lzss e 24lm.map 24lm.map.zip
+
 ruby -I../../SNES_Utils/lib/ ../../SNES_Utils/bin/png2snes -f tiles.png -m -a 000000
