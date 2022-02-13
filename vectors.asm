@@ -164,45 +164,7 @@ FastNmi:
     lda @m7_y+1
     sta M7Y
 
-    ; TEST
-    lda @need_update_row
-    bit #01
-    beq @check_transfer_next_col
-
-    lda #00
-    sta VMAINC
-    ; src 0000 should be a register (next_row_y)
-
-    .call M16
-    ; next_row_y *= 128
-    lda @next_row_y
-    pha
-    .call ASL3
-    .call ASL4
-    sta @next_row_y
-    .call M8
-
-    .call VRAM_DMA_TRANSFER_TEST2 next_row_y, next_row, 0100, 18
-    stz @need_update_row
-
-    plx
-    stx @next_row_y
-
-check_transfer_next_col:
-    lda @need_update_col
-    bit #01
-    beq @skip_transfer_next_col
-
-    lda #02
-    sta VMAINC
-    ; src 0000/0001 should be a register (next_col_x, next_col_x+1)
-    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col1, 0080, 18
-    inc @next_col_x
-    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col2, 0080, 18
-    dec @next_col_x
-    stz @need_update_col
-
-skip_transfer_next_col:
+    jsr @TransferColRow
 
     jsr @TransferOamBuffer
 
@@ -219,6 +181,45 @@ skip_transfer_next_col:
     plp
     rti
 
+TransferColRow:
+    lda @need_update_col
+    bit #01
+    beq @check_transfer_next_row
+
+    lda #02
+    sta VMAINC
+    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col1, 0080, 18
+    inc @next_col_x
+    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col2, 0080, 18
+    dec @next_col_x
+    stz @need_update_col
+
+check_transfer_next_row:
+    lda @need_update_row
+    bit #01
+    beq @skip_transfer_next_row
+
+    lda #00
+    sta VMAINC
+
+    .call M16
+    ; next_row_y *= 128
+    lda @next_row_y
+    pha
+    .call ASL3
+    .call ASL4
+    sta @next_row_y
+    .call M8
+
+    .call VRAM_DMA_TRANSFER_TEST2 next_row_y, next_row, 0100, 18
+    stz @need_update_row
+
+    plx
+    stx @next_row_y
+
+skip_transfer_next_row:
+
+    rts
 
 HdmaTest:
     php
