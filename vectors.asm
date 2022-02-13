@@ -182,13 +182,25 @@ FastNmi:
     rti
 
 TransferColRow:
+    lda @need_update_col
+    bit #01
+    beq @check_transfer_next_row
+
+    lda #02
+    sta VMAINC
+    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col1, 0080, 18
+    inc @next_col_x
+    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col2, 0080, 18
+    dec @next_col_x
+    stz @need_update_col
+
+check_transfer_next_row:
     lda @need_update_row
     bit #01
-    beq @check_transfer_next_col
+    beq @skip_transfer_next_row
 
     lda #00
     sta VMAINC
-    ; src 0000 should be a register (next_row_y)
 
     .call M16
     ; next_row_y *= 128
@@ -205,21 +217,7 @@ TransferColRow:
     plx
     stx @next_row_y
 
-check_transfer_next_col:
-    lda @need_update_col
-    bit #01
-    beq @skip_transfer_next_col
-
-    lda #02
-    sta VMAINC
-    ; src 0000/0001 should be a register (next_col_x, next_col_x+1)
-    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col1, 0080, 18
-    inc @next_col_x
-    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col2, 0080, 18
-    dec @next_col_x
-    stz @need_update_col
-
-skip_transfer_next_col:
+skip_transfer_next_row:
 
     rts
 
