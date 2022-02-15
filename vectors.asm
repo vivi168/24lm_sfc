@@ -23,7 +23,7 @@ FastReset:
     lda #07             ; bg 3 high prio, mode 1
     sta BGMODE
 
-    lda #11             ; enable BG1 + sprites (0b10001)
+    lda #13             ; enable BG12 + sprites (0b10011)
     sta TM
 
 ;  ---- OBJ settings
@@ -31,25 +31,6 @@ FastReset:
     sta OBJSEL          ; oam start @VRAM[c000]
 
 ;  ---- Some initialization
-
-; Writing a <new> byte to one of the write-twice M7'registers does:
-; M7_reg = new * 100h + M7_old
-; M7_old = new
-
-    ; lda #00
-    ; sta M7A
-    ; lda #02
-    ; sta M7A
-
-    ; lda #80
-    ; sta M7C
-    ; lda #00
-    ; sta M7C
-
-    ; lda #00
-    ; sta M7D
-    ; lda #01
-    ; sta M7D
 
     jsr @InitLzssDecode
     jsr @InitOamBuffer
@@ -70,6 +51,9 @@ FastReset:
     .call M8
     jsr @InitTileMap
 
+    jsr @InitHorizon
+
+    ; bg 1 scroll
     lda @screen_x
     sta BG1HOFS
     lda @screen_x+1
@@ -79,7 +63,33 @@ FastReset:
     lda @screen_y+1
     sta BG1VOFS
 
+    ; BG 2 scroll
+    lda #00
+    sta BG2VOFS
+    sta BG2VOFS
+    lda @horizon_scroll
+    sta BG2HOFS
+    lda @horizon_scroll+1
+    sta BG2HOFS
+
+    ; MODE 7 CENTER/MATRIX PARAMS
+    lda @m7_x
+    sta M7X
+    lda @m7_x+1
+    sta M7X
+    lda @m7_y
+    sta M7Y
+    lda @m7_y+1
+    sta M7Y
+
 ;  ---- DMA Transfers
+
+    ; horizon
+    .call CLEAR_VRAM_DMA 4000, 0800
+    .call VRAM_DMA_TRANSFER 4400, horizon_map, HORIZON_MAP_SIZE         ; VRAM[0x8800] (word step)
+    .call VRAM_DMA_TRANSFER 4800, horizon_map, HORIZON_MAP_SIZE         ; VRAM[0x9000] (word step)
+    .call VRAM_DMA_TRANSFER 5000, horizon_tiles, HORIZON_TILES_SIZE       ; VRAM[0xA000] (word step)
+    .call CGRAM_DMA_TRANSFER 00, horizon_pal, HORIZON_PAL_SIZE
 
     ; transfer tilemap (write low byte of VRAM, then inc)
     lda #00
@@ -92,7 +102,7 @@ FastReset:
     .call VRAM_DMA_TRANSFER_TEST 0000, bg1_tiles, 4000, 19
     .call VRAM_DMA_TRANSFER 6000, sprites_tiles, SPRITES_TILES_SIZE   ; VRAM[0xc000] (word step)
 
-    .call CGRAM_DMA_TRANSFER 00, bg1_pal, BG1_PALETTE_SIZE
+    .call CGRAM_DMA_TRANSFER 20, bg1_pal, BG1_PALETTE_SIZE
     .call CGRAM_DMA_TRANSFER 80, sprites_pal, SPRITES_PALETTE_SIZE  ; CGRAM[0x100] (word step)
 
     jsr @TransferOamBuffer
@@ -149,8 +159,12 @@ FastNmi:
 
     lda RDNMI
 
+    stz MDMAEN
+    stz HDMAEN
+
     inc @frame_counter
 
+    ; bg 1 scroll
     lda @screen_x
     sta BG1HOFS
     lda @screen_x+1
@@ -160,14 +174,59 @@ FastNmi:
     lda @screen_y+1
     sta BG1VOFS
 
-    ; TEST
+    ; bg 2 scroll
+    lda @horizon_scroll
+    sta BG2HOFS
+    lda @horizon_scroll+1
+    sta BG2HOFS
+
+    ; MODE 7 CENTER/MATRIX PARAMS
+    lda @m7_x
+    sta M7X
+    lda @m7_x+1
+    sta M7X
+    lda @m7_y
+    sta M7Y
+    lda @m7_y+1
+    sta M7Y
+
+    jsr @TransferColRow
+
+    jsr @TransferOamBuffer
+
+    jsr @HdmaTest
+
+    jsr @ReadJoyPad1
+
+    inc @vblank_disable
+
+    .call MX16
+    ply
+    plx
+    pla
+    plp
+    rti
+
+TransferColRow:
+    lda @need_update_col
+    bit #01
+    beq @check_transfer_next_row
+
+    lda #02
+    sta VMAINC
+    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col1, 0080, 18
+    inc @next_col_x
+    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col2, 0080, 18
+    dec @next_col_x
+    stz @need_update_col
+
+check_transfer_next_row:
     lda @need_update_row
     bit #01
-    beq @check_transfer_next_col
+    beq @skip_transfer_next_row
 
     lda #00
     sta VMAINC
-    ; src 0000 should be a register (next_row_y)
 
     .call M16
     ; next_row_y *= 128
@@ -184,30 +243,81 @@ FastNmi:
     plx
     stx @next_row_y
 
-check_transfer_next_col:
-    lda @need_update_col
-    bit #01
-    beq @skip_transfer_next_col
+skip_transfer_next_row:
+
+    rts
+
+HdmaTest:
+    php
+
+    ; m7_a via channel 3
+    lda #^m7_a_hdma_table
+    sta A1T3B
+    ldx #@m7_a_hdma_table
+    stx A1T3L
+
+    lda #1B ; via port 21*1B* (M7A)
+    sta BBAD3
+
+    lda #02 ; mode 2, transfer 2 bytes
+    sta DMAP3
+
+    ; m7_b via channel 4
+    lda #^m7_b_hdma_table
+    sta A1T4B
+    ldx #@m7_b_hdma_table
+    stx A1T4L
+
+    lda #1C ; via port 21*1C* (M7B)
+    sta BBAD4
 
     lda #02
-    sta VMAINC
-    ; src 0000/0001 should be a register (next_col_x, next_col_x+1)
-    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col1, 0080, 18
-    inc @next_col_x
-    .call VRAM_DMA_TRANSFER_TEST2 next_col_x, next_col2, 0080, 18
-    dec @next_col_x
-    stz @need_update_col
+    sta DMAP4
 
-skip_transfer_next_col:
+    ; m7_b via channel 5
+    lda #^m7_c_hdma_table
+    sta A1T5B
+    ldx #@m7_c_hdma_table
+    stx A1T5L
 
-    jsr @TransferOamBuffer
-    jsr @ReadJoyPad1
+    lda #1D ; via port 21*1D* (M7C)
+    sta BBAD5
 
-    inc @vblank_disable
+    lda #02
+    sta DMAP5
 
-    .call MX16
-    ply
-    plx
-    pla
+    ; m7_b via channel 6
+    lda #^m7_d_hdma_table
+    sta A1T6B
+    ldx #@m7_d_hdma_table
+    stx A1T6L
+
+    lda #1E ; via port 21*1E* (M7D)
+    sta BBAD6
+
+    lda #02
+    sta DMAP6
+
+    ; BGMODE via channel 7
+    lda #^BGModeHDMATable
+    sta A1T7B
+    ldx #@BGModeHDMATable
+    stx A1T7L
+
+    lda #05 ; via port 21*05* (BGMODE)
+    sta BBAD7
+
+    lda #00 ; mode 1, transfer 1 byte
+    sta DMAP7
+
+    ; start transfers via channels 3,4,5,6 (1111 1000)
+    lda #f8
+    sta HDMAEN
+
     plp
-    rti
+    rts
+
+; mode 2, then wait 78 scanlines
+; mode 7, until end of this frame
+BGModeHDMATable:
+    .db 4e,02,01,07,00

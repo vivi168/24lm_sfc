@@ -68,6 +68,17 @@ player_sy:                .rb 2 ; position on screen
 camera_x:                 .rb 2
 camera_y:                 .rb 2
 
+; horizon
+horizon_scroll:           .rb 2
+
+; mode 7
+m7_a: .rb 2
+m7_b: .rb 2
+m7_c: .rb 2
+m7_d: .rb 2
+m7_x: .rb 2
+m7_y: .rb 2
+
 ; ---- for decompression
 r:                      .rb 2
 i:                      .rb 2
@@ -96,6 +107,13 @@ next_row:                 .rb 100
 oam_buffer:               .rb 200
 oam_buffer_hi:            .rb 20
 decompression_buffer:     .rb 1000 ; decompression buffer
+
+.org 7e8000
+
+m7_a_hdma_table: .rb 200
+m7_b_hdma_table: .rb 200
+m7_c_hdma_table: .rb 200
+m7_d_hdma_table: .rb 200
 
 .org 7f0000
 

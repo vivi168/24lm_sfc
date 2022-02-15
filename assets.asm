@@ -10,5 +10,15 @@ sprites_pal:   .incbin assets/sprites.pal
 metatiles:   .incbin assets/metatiles.bin
 circuit_zip: .incbin assets/24lm.map.zip
 
-sines_lut:   .incbin assets/sines.bin
-cosines_lut: .incbin assets/cosines.bin
+binrad_sines_lut:   .incbin assets/binrad_sines.bin
+
+m7_sines_lut: .incbin assets/m7_sines.bin
+lambda_lut:   .incbin assets/lambda_lut.bin
+
+horizon_tiles: .incbin assets/horizon.tiles
+horizon_pal:   .incbin assets/horizon.pal
+horizon_map:   .incbin assets/horizon.map
+
+null_byte: .db 00
+
+end_assets:

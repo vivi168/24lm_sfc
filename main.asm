@@ -18,6 +18,7 @@
 .include math.asm
 .include joypad.asm
 .include level.asm
+.include horizon.asm
 .include object.asm
 .include hud.asm
 .include music.asm
@@ -30,6 +31,9 @@ MainLoop:
 
     jsr @UpdatePlayer
     jsr @UpdatePlayerOAM
+
+    jsr @UpdateM7Params
+    jsr @UpdateM7HDMATables
 
     jmp @MainLoop
 
@@ -151,7 +155,6 @@ end_column_update:
     ; next_row_y
     lda @next_dst_y
     sta @cx
-    brk 00
     jsr @CopyNextCol
     lda @need_update
     ora #0001
@@ -219,7 +222,6 @@ end_row_update:
     ; next_col_x
     lda @next_dst_x
     sta @cx
-    brk 01
     jsr @CopyNextRow
     lda @need_update
     ora #0100
@@ -279,6 +281,217 @@ CenterCam:
 
     .call M8
     .call RESTORE_STACK_FRAME 04
+
+    plp
+    rts
+
+UpdateM7Params:
+    php
+
+    .call M16
+
+    ; matrix_angle = - player_angle - 90
+    lda @player_angle
+    eor #ffff
+    inc
+
+    sec
+    sbc #0040
+    and #00ff
+    sta @ax
+
+    ; A =  cos(matrix_angle)
+    jsr @GetCosM7
+    sta @m7_a
+    sta @m7_d ; acts as a m7_a backup to check sign later...
+
+    lda @ax
+    ; B =  sin(matrix_angle)
+    jsr @GetSinM7
+    sta @m7_b
+    sta @m7_c ; acts as a m7_b backup to check sign later...
+
+    ; X = screen_x + SCREEN_W/2
+    lda @screen_x
+    clc
+    adc #0080
+    sta @m7_x
+
+    ; Y = screen_y + SCREEN_H/2
+    lda @screen_y
+
+    ; Offset transformation towards the bottom
+    clc
+    adc #00a8
+    sta @m7_y
+
+    plp
+    rts
+
+UpdateM7HDMATables:
+    php
+
+
+    ; for 78 scanlines...
+    lda #4e
+    sta !m7_a_hdma_table
+    sta !m7_b_hdma_table
+    sta !m7_c_hdma_table
+    sta !m7_d_hdma_table
+
+    ; set default params for M7 A,D (0x100)
+    .call M16
+    lda #0100
+    sta !m7_a_hdma_table+1
+    sta !m7_d_hdma_table+1
+
+    ; set default params for M7 A,D (0x0)
+    lda #0000
+    sta !m7_b_hdma_table+1
+    sta !m7_c_hdma_table+1
+
+
+; ---- Check if angle is positive
+
+    stz 01 ; neg cos = false, neg sin = false
+
+    lda @m7_a
+    bpl @m7_a_positive
+
+    ; if cos_a < 0: cos_a = -cos_a
+    eor #ffff
+    inc
+    sta @m7_a
+
+m7_a_positive:
+    lda @m7_b
+    bpl @m7_b_positive
+
+    ; if sin_a < 0: sin_a = -sin_a
+    eor #ffff
+    inc
+    sta @m7_b
+
+m7_b_positive:
+
+; ---- Fill Tables loop
+
+    ldy #0000
+    ldx #0003 ; start from index 3 of the table
+fill_tables_loop:
+
+    .call M8
+    lda #01
+    sta !m7_a_hdma_table,x
+    sta !m7_b_hdma_table,x
+    sta !m7_c_hdma_table,x
+    sta !m7_d_hdma_table,x
+
+    ; lam = lam_lut[i]
+    phx ; save x
+    tyx
+    lda !lambda_lut,x
+    sta @ah
+    plx ; restore x
+    inx
+
+    jsr @SaveADParams
+    jsr @SaveBCParams
+
+    inx
+    inx
+    iny
+    cpy #0092; for 146 scanlines
+    bne @fill_tables_loop
+
+    .call M16
+
+    ; terminate hdma tables with 0x00 0x00
+    lda #0000
+    sta !m7_a_hdma_table,x
+    sta !m7_b_hdma_table,x
+    sta !m7_c_hdma_table,x
+    sta !m7_d_hdma_table,x
+
+
+    plp
+    rts
+
+
+SaveADParams:
+    php
+
+    lda @ah ; lam
+    sta WRMPYA
+
+    lda @m7_a
+    sta WRMPYB
+
+    .call WAIT8
+
+    ; A = (cos_a * lam) >> 6
+    .call M16
+    lda RDMPYL
+    .call LSR3
+    .call LSR3
+
+    sta @bx ; save result
+
+    ;if neg_cos_result:  A = (A ^ 0xffff) + 1
+    lda @m7_d
+    bpl @skip_neg_cos_result
+
+    lda @bx
+    eor #ffff
+    inc
+    sta @bx
+
+skip_neg_cos_result:
+
+    lda @bx
+    sta !m7_a_hdma_table,x
+    sta !m7_d_hdma_table,x
+
+    plp
+    rts
+
+SaveBCParams:
+    php
+
+    lda @ah ; lam
+    sta WRMPYA
+
+    lda @m7_b
+    sta WRMPYB
+
+    .call WAIT8
+
+    ; B = (sin_a * lam) >> 6
+    .call M16
+    lda RDMPYL
+    .call LSR3
+    .call LSR3
+
+    sta @bx ; save result
+
+    ;if neg_sin_result:  B = (B ^ 0xffff) + 1
+    lda @m7_c
+    bpl @skip_neg_sin_result
+
+    lda @bx
+    eor #ffff
+    inc
+    sta @bx
+
+skip_neg_sin_result:
+
+    lda @bx
+    sta !m7_b_hdma_table,x
+
+    eor #ffff
+    inc
+
+    sta !m7_c_hdma_table,x
 
     plp
     rts

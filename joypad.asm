@@ -94,32 +94,29 @@ add_y_coord:
     bra @check_direction_keys
 
 turn_left:
-    dec @player_angle
-    bra @keep_angle_in_bound
+    dec @horizon_scroll
+    dec @horizon_scroll
+    lda @player_angle
+    dec
+    and #00ff
+    sta @player_angle
+    bra @exit_handle_input
 
 turn_right:
-    inc @player_angle
-
-keep_angle_in_bound:
+    inc @horizon_scroll
+    inc @horizon_scroll
     lda @player_angle
-    bmi @set_angle ; < 0 ? -> 359
-    cmp #0168 ; >= 360 ? -> 0
-    bcs @reset_angle
-    bra @exit_handle_input
-reset_angle:
-    stz @player_angle
-    bra @exit_handle_input
-set_angle:
-    lda #0167 ; angle = 359
+    inc
+    and #00ff
     sta @player_angle
 
 exit_handle_input:
     lda @player_angle
-    asl ; entries are two bytes
-    tax
-    lda !cosines_lut,x
+    jsr @GetCos
     sta @player_dx
-    lda !sines_lut,x
+
+    lda @player_angle
+    jsr @GetSin
     sta @player_dy
 
     plp
@@ -201,6 +198,55 @@ add_y_coord2:
     sta @player_fy_hi
 
 exit_handle_input2:
+
+    plp
+    rts
+
+
+
+; Assist mode 7 debug
+; left / right -> decrease / increase B, C parameters
+; down / up -> decrease / increase A, D parameters
+HandleInput3:
+    php
+
+    .call M16
+
+    stz @dx
+
+    lda @joy1_held
+    bit #BUTTON_LEFT
+    bne @decrease_bc
+
+    bit #BUTTON_RIGHT
+    bne @increase_bc
+
+    bit #BUTTON_UP
+    bne @increase_ad
+
+    bit #BUTTON_DOWN
+    bne @decrease_ad
+
+    jmp @exit_handle_input3
+
+
+decrease_bc:
+    inc @m7_b
+    dec @m7_c
+    jmp @exit_handle_input3
+increase_bc:
+    dec @m7_b
+    inc @m7_c
+    jmp @exit_handle_input3
+increase_ad:
+    inc @m7_a
+    inc @m7_d
+    jmp @exit_handle_input3
+decrease_ad:
+    dec @m7_a
+    dec @m7_d
+
+exit_handle_input3:
 
     plp
     rts

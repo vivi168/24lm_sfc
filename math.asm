@@ -70,3 +70,68 @@ asl_32_loop:
 
     plp
     rts
+
+; angle in A:16
+; result in A:16
+GetSin:
+    asl
+    bit #0100
+    bne @negative_sin
+
+    tax
+    lda !binrad_sines_lut,x
+    bra @exit_get_sin
+
+negative_sin:
+    and #00ff
+    tax
+    lda !binrad_sines_lut,x
+    eor #ffff
+    inc
+
+exit_get_sin:
+
+    rts
+
+; angle in A:16
+; result in A:16
+GetCos:
+    clc
+    adc #0040
+    and #00ff
+    jsr @GetSin
+
+    rts
+
+
+
+; angle in A:16
+; result in A:16
+GetSinM7:
+    asl
+    bit #0100
+    bne @negative_m7sin
+
+    tax
+    lda !m7_sines_lut,x
+    bra @exit_get_m7sin
+
+negative_m7sin:
+    and #00ff
+    tax
+    lda !m7_sines_lut,x
+    eor #ffff
+    inc
+
+exit_get_m7sin:
+    rts
+
+; angle in A:16
+; result in A:16
+GetCosM7:
+    clc
+    adc #0040
+    and #00ff
+    jsr @GetSinM7
+
+    rts

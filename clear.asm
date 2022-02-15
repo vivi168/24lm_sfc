@@ -100,12 +100,27 @@ ClearRegisters:
     stz @next_row_y
 
     stz @player_angle
-    ldx @player_angle
-    lda !cosines_lut,x
+    lda @player_angle
+    jsr @GetCos
     sta @player_dx
 
-    lda !sines_lut,x
+    lda @player_angle
+    jsr @GetSin
     sta @player_dy
+
+    lda #0100
+    sta @m7_a
+    sta @m7_d
+    stz @m7_b
+    stz @m7_c
+
+
+    lda #0208
+    sta @m7_x
+    lda #0198
+    sta @m7_y
+
+
     .call M8
 
     stz @frame_counter
@@ -181,6 +196,9 @@ InitialSettings:
     and #0fff
     .call LSR4
     sta @next_src_y
+
+    ; reset horizon
+    stz @horizon_scroll
 
     plp
     rts
